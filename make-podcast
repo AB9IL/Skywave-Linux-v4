@@ -1,0 +1,37 @@
+#!/bin/bash
+
+TIME=$(date +%Y-%m-%d_%H-%M-%S)
+
+case "$1" in
+	-h*|-H*)
+		if [[ "$2" -ne "0" || -z "$2" ]]; then
+			echo "usage: make-podcast <record | trim> <audiofile> <start time hh:mm:ss> <end time hh:mm:ss>"
+			echo "The record function compands and saves audio in wav format."
+			echo "The trim function also converts audio to mp3 format."
+			exit
+		fi
+	;;
+	trim)
+		echo "file: $2, start: $3, end: $4"
+		# Trim, compand, and convert to mp3 in FFMPEG
+		ffmpeg -y \
+			-i "$2" \
+			-ss "$3" \
+			-to "$4" \
+			-acodec libmp3lame \
+			-b:a 128k \
+			output.mp3
+	;;
+	record)
+		echo "Recording from Pulseaudio, processing in FFMPEG..."
+		# Recording raw audio data with FFMPEG
+		ffmpeg -y \
+			-f pulse \
+			-ac 1 \
+			-ar 48000 \
+			-i default \
+			-filter_complex "compand=attacks=0:points=-60/-40|-30/-15|-15/-10|-5/-8|0/-6" \
+			-acodec pcm_s16le \
+			audio_$TIME.wav
+	;;
+esac
