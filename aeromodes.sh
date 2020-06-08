@@ -12,23 +12,26 @@
 #application must run one at a time on a device.
 
 #-------------Set Variables----------------------------------------
-#Designate up to eight ACARS frequencies, specified in MHz:
-afreq=$(cat ~/Documents/ACARS_FREQS)
-
-#Designate up to eight vdl mode 2 frequencies, specified in MHz:
-vfreq=$(cat ~/Documents/VDL_FREQS)
+#Designate up to eight ACARS frequencies, one per line, specified in MHz:
+readarray -t afreq < ~/Documents/ACARS_FREQS
+echo "Found the ACARS frequency list in ~/Documents/ACARS_FREQS: ${afreq[@]}"
+#Designate up to eight vdl mode 2 frequencies, one per line specified in MHz:
+readarray -t vfreq < ~/Documents/VDL_FREQS
+echo "Found the VDL frequency list in ~/Documents/VDL_FREQS: ${vfreq[@]}"
 
 #Specify the ACARS database file:
-acarslog="~/acarsserv.db"
+acarslog="$HOME/acarsserv.db"
 #Specify the VDL2 database file:
-vdl2log="~/vdl2serv.db"
+vdl2log="$HOME/vdl2serv.db"
 
 #-------------There be dragons below this line---------------------
 #Get the SDR frequency offset (ppm)
 ppm=$(cat /usr/local/etc/sdr_offset)
 #Get the SDR gain (gain)
 gain=$(cat /usr/local/etc/sdr_gain)
-
+# Get the device key
+devkey=$(cat /usr/local/etc/sdr_key)
+zero="0"
 ans=$(zenity  --list  --title="RTLSDR Multichannel Digital Decoders" \
 --height 370 --width 350 \
 --text="ACARSdec and VDLM2dec functions:
@@ -45,28 +48,26 @@ ans=$(zenity  --list  --title="RTLSDR Multichannel Digital Decoders" \
 FALSE "Stop ACARSdec" FALSE "Stop VDLM2dec" --column "Action");
 
 if [  "$ans" = "Run ACARSdec" ]; then
-	 killall -9 acarsdec
-	 killall -9 acarsserv
-
-	sh -c "acarsserv -v -j 127.0.0.1:5555 -b ${acarslog} -s" &
+	killall -9 acarsdec
+	killall -9 acarsserv
+	acarsdec -v -o 2 -j 127.0.0.1:5555 -g $gain$zero -p $ppm -r $devkey ${afreq[@]} &
 	sleep 3
-	sh -c "acarsdec -v -o 2 -j 127.0.0.1:5555 -g ${gain}0 -p 0${ppm} -r 0 ${afreq[*]}" &
+	acarsserv -v -j 127.0.0.1:5555 -b $acarslog -s &
 	sleep 3
-	sh -c "sqlitebrowser ${acarslog}" &
+	sqlitebrowser $acarslog &
 	WINDOW=$(zenity --info --height 100 --width 350 \
 	--title="ACARSdec - Running." \
 	--text="The multi channel ACARS monitor is running.  To stop, use this application and select \"Stop ACARSdec.\"");
 
 
 elif [  "$ans" = "Run VDLM2dec" ]; then
-	 killall -9 dumpvdl2
-	 touch $vdl2log
-
-	sh -c "acarsserv -v -j 127.0.0.1:5555 -b ${vdl2log} -s" &
+	killall -9 dumpvdl2
+	killall -9 acarsserv
+	vdlm2dec -v -J -G -E -j 127.0.0.1:5555 -g $gain$zero -p $ppm -r $devkey ${vfreq[@]} &
 	sleep 3
-	sh -c "vdlm2dec -v -J -G -E -j 127.0.0.1:5555 -g ${gain}0 -p 0${ppm} -r 0 ${vfreq[*]}" &
+	acarsserv -v -j 127.0.0.1:5555 -b $vdl2log -s &
 	sleep 3
-	sh -c "sqlitebrowser ${vdl2log}" &
+	sqlitebrowser $vdl2log &
 	WINDOW=$(zenity --info --height 100 --width 350 \
 	--title="VDLM2dec - Running." \
 	--text="The multi channel VDLM2 monitor is running.  To stop, use this application and select \"Stop VDLM2dec.\"");
@@ -85,4 +86,3 @@ elif [  "$ans" = "Stop VDLM2dec" ]; then
 	 exit
 
 fi
-
