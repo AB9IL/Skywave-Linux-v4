@@ -13,14 +13,24 @@
 
 Encoding=UTF-8
 
+#Get the SDR frequency offset (ppm)
+ppm=$(cat /usr/local/etc/sdr_offset)
+#Get the SDR gain (gain)
+gain=$(cat /usr/local/etc/sdr_gain)
+
 get_offset(){
-echo "Measuring ppm offset on channel "$best_channel
-offset=($(kal -c $best_channel 2>&1 | grep "absolute error" | grep -Po "\d*\." | awk '{printf "%.0f", $0}'))
+echo "Best channel is: $best_channel."
+	WINDOW=$(zenity --info --height 100 --width 350 \
+	--title="Calibration and Gain" \
+	--text="Channel $best_channel selected for ppm offset measurements.");
+
+offset=($(kal -c $best_channel -g $gain -e $ppm 2>&1 | grep "absolute error" | grep -Po "\d*\." | awk '{printf "%.0f", $0}'))
 
 if [[ -z "$offset" ]]; then
 		notifyerror
 fi
 
+echo "Offset (ppm) is: $offset."
 echo $offset > /usr/local/etc/sdr_offset  # save offset for general usage
 sed -i "s/corr_freq=.*/corr_freq=${offset}000000/g" ~/.config/gqrx/default.conf # save offset for gqrx
 
@@ -30,6 +40,7 @@ sed -i "s/corr_freq=.*/corr_freq=${offset}000000/g" ~/.config/gqrx/default.conf 
 }
 
 notifyerror(){
+echo "Something went wrong."
 	WINDOW=$(zenity --info --height 100 --width 350 \
 	--title="Calibration and Gain" \
 	--text="Something went wrong.");
@@ -38,7 +49,7 @@ notifyerror(){
 
 scan_band(){
 echo "Please stand by.  Scanning for $band stations..."
-mapfile -t arr < <(kal -v -s $band -g 40 2>&1 | grep 'chan:' | awk '{printf $2" "$7"\n"}' | sort -nrk2)
+mapfile -t arr < <(kal -v -s $band -g $gain -e $ppm 2>&1 | grep 'chan:' | awk '{printf $2" "$7"\n"}' | sort -nrk2)
 echo "Chan Strength"
 printf '%s\n' "${arr[@]}"
 set -- ${arr[0]}
@@ -51,8 +62,8 @@ OUTPUT=$(zenity --forms --title="SoapySDR Device Type" --width 400 --height 100 
 --text="Enter the SDR start-up parameters
 reported by \"SoapySDRUtil --find\"." \
 --separator="," \
---add-entry="SoapySDR Device Driver (e.g. rtlsdr):" \
---add-entry="SoapySDR Device Key (e.g. rtl=0):" \
+--add-entry="SoapySDR Device Driver (e.g. rtlsdr or airspy):" \
+--add-entry="SoapySDR Device Key (e.g. 0, 1, or 2):" \
 );
 
 if [[ "$?" -ne "0" ]]; then
@@ -93,6 +104,13 @@ echo $gain > /usr/local/etc/sdr_gain
 	--text="A gain of $gain has been written to file /usr/local/etc/sdr_gain.");
 }
 
+check_soapy() {
+mydevinfo=$(SoapySDRUtil --find)
+	WINDOW=$(zenity --info --height 500 --width 500 \
+	--title="SoapySDR Device Type" \
+	--text="${mydevinfo}");
+}
+
 setoffset(){
 OUTPUT=$(zenity --forms --title="Calibration and Gain" --width 400 --height 100 \
 --text="Enter the desired SDR offset (ppm)." \
@@ -112,14 +130,16 @@ sed -i "s/corr_freq=.*/corr_freq=${offset}000000/g" ~/.config/gqrx/default.conf 
 	--text="An offset of $offset ppm has been written to file /usr/local/etc/sdr_offset.");
 }
 
-ans=$(zenity  --list  --title "SDR Operating Parameters" --width=500 --height=290 \
+ans=$(zenity  --list  --title "SDR Operating Parameters" --width=500 --height=350 \
 --text "Manage RTL-SDR frequency calibration and gain.
 1) Calibration uses measurements of GSM base stations.
-2) Device gain is saved for reference by other applications." \
+2) Device gain is saved for reference by other applications.
+3) Please be patient: it is a slow process." \
 --radiolist  --column "Pick" --column "Action" \
 TRUE "Scan for GSM 850 MHz base stations." \
 FALSE "Scan for GSM 900 MHz base stations." \
 FALSE "Scan for E-GSM base stations." \
+FALSE "Check SoapySDR device information." \
 FALSE "Manually program the SDR offset." \
 FALSE "Manually program the SDR gain." \
 FALSE "Manually program the SoapySDR device data.");
@@ -135,6 +155,8 @@ FALSE "Manually program the SoapySDR device data.");
 	elif [  "$ans" = "Scan for E-GSM base stations." ]; then
 		band='EGSM'
 		scan_band
+	elif [  "$ans" = "Check SoapySDR device information." ]; then
+		check_soapy
 
 	elif [  "$ans" = "Manually program the SDR offset." ]; then
 		setoffset
