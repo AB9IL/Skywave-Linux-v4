@@ -9,6 +9,8 @@
 
 # Capture a wide RF bandwidth and operate a multichannel SDR receiver.
 
+streamname="RTLSDR-Airband Multichannel"
+genre="Voice Communicatons"
 #Get the SDR frequency offset (ppm)
 corr=$(cat /usr/local/etc/sdr_offset)
 #Get the SDR gain (gain)
@@ -17,7 +19,29 @@ gain=$(cat /usr/local/etc/sdr_gain)
 devdriver=$(cat /usr/local/etc/sdr_driver)
 #Get the SoapySDR key number
 devkey=$(cat /usr/local/etc/sdr_key)
-# RF sampling rate used by rtl_fm or rx_fm
+#Get the frequency and mode list
+readarray FREQLIST < ~/Documents/VOICE_FREQS
+
+# compute the median frequency here...
+MYLIST=()
+for thefreq in ${FREQLIST[@]}; do
+	a=$(echo $thefreq | cut -f1 -d ",")
+	MYLIST+=("${a}")
+done
+
+IFS=$'\n'
+ctrfreq=$(awk '{arr[NR]=$1} END {if (NR%2==1) print arr[(NR+1)/2]; \
+else print (arr[NR/2]+arr[NR/2+1])/2}' <<< sort <<< "${MYLIST[*]}")
+
+# Format the center frequency the SDR will use
+ctrfreq=$(printf "%8.2f\n" "$ctrfreq")
+
+echo "Found the frequency list in ~/Documents/VOICE_FREQS: ${FREQLIST[@]}"
+echo "Median frequency is ${ctrfreq}"
+unset IFS
+
+# The number of channels
+channels=${#MYLIST[@]}
 
 start0(){
 #start rtlsdr-airband on PulseAudio
@@ -45,6 +69,8 @@ stop
 start2(){
 #build the config file for using PulseAudio
 buildconf0
+# copy the new config file
+cp -f /usr/local/etc/rtl_airband-pulse.conf /usr/local/etc/rtl_airband.conf
 #start rtlsdr-airband
 /usr/local/bin/rtl_airband &
 WINDOW=$(zenity --info --height 100 --width 350 \
@@ -55,8 +81,9 @@ To stop, use this application and select \"Stop Multichannel Voice.\""
 }
 
 start3(){
-#build the config file for using IceCast
+#build the config file for using icecast
 buildconf1
+cp -f /usr/local/etc/rtl_airband-icecast.conf /usr/local/etc/rtl_airband.conf
 #start rtlsdr-airband
 service icecast2 start
 sleep 3
@@ -72,33 +99,12 @@ killall rtl_airband
 #stop the icecast2 server
 service icecast2 stop
 sleep 2
+echo "STOPPED RTLSDR-Airband. Alpha Mike Foxtrot..."
 exit
 }
 
 buildconf0(){
-DEVICE=$(zenity --forms --height 300 --width 500 \
---title="Multichannel Voice - Configure For PulseAudio" \
---separator="," \
---text="Output will be sent to PulseAudio.
-First, use the SDR Operating Parameters application
-to enter your device type, PPM offset, and gain.  Then
-fill in the fields below to start monitoring." \
---add-entry="Device Center Frequency (MHz):" \
---add-entry="Number of channels (1 or more):" \
---add-entry="Stream Name:" \
---add-entry="Genre:" \
-);
-
-if [[ "$?" -ne "0" || -z "$?" ]]; then
-    notifyerror
-    stop
-fi
-
-ctrfreq=$(awk -F, '{printf "%8.3f\n", $1}' <<<$DEVICE)
-channels=$(awk -F, '{print $2}' <<<$DEVICE)
-streamname=$(awk -F, '{print $3}' <<<$DEVICE)
-genre=$(awk -F, '{print $4}' <<<$DEVICE)
-
+# data and config for PulseAudio
 #top of the file, defining SDR tuning, etc
 echo '# This is a sample configuration file for RTLSDR-Airband.
 # Just a single SDR with multiple AM channels in multichannel mode.
@@ -120,38 +126,21 @@ mixers: {
 devices:
 ({
   type = "soapysdr";
-  device_string = "driver='$devdriver','$devkey'";
+  device_string = "driver='$devdriver',device_id='$devkey'";
   gain = '$gain';
   centerfreq = '$ctrfreq';
   correction = '$corr';
   channels:
-  (' > /usr/local/etc/rtl_airband.conf
+  (' > /usr/local/etc/rtl_airband-pulse.conf
 
-for (( n=1; n <= $channels; ++n ))
-do
-
-CHNLDATA=$(zenity --forms --title="Multichannel Voice - Channel $n Data" \
---separator="," \
---text="Enter the data for channel $n.
-Frequencies must be within +/- 1.25 MHz
-of center frequency $ctrfreq.
-
-Example:   Frequency (MHz): 120.6
-           Mode (am,fm:): am" \
---add-entry="Channel $n Frequency (MHz):" \
---add-entry="Channel $n Mode (am,fm):" \
-);
-
-if [[ "$?" -ne "0" || -z "$?" ]]; then
-    notifyerror
-    stop
-fi
-
-freq=$(awk -F, '{printf "%8.3f\n", $1}' <<<$CHNLDATA)
-mode=$(awk -F, '{print $2}' <<<$CHNLDATA)
-
+#write the channel and mode confifig data here...
+n=1
 comma=","
-if (($n == $channels)); then
+for thechannel in ${FREQLIST[@]}; do
+freq=$(echo $thechannel | cut -f1 -d ",")
+mode=$(echo $thechannel | cut -f2 -d ",")
+
+if (( $n == $channels )); then
      comma=""
 fi
 
@@ -162,7 +151,7 @@ if [[ $(( $n % 2 )) -eq 0 ]];
 fi
 
 # for one channel use mono
-if (($channels == 1));
+if (( $channels == 1 ));
 	then bal="0.0"
 fi
 
@@ -177,41 +166,19 @@ echo '    {
 	  balance = '$bal';
 	}
       );
-    }'$comma >> /usr/local/etc/rtl_airband.conf
-
+    }'$comma >> /usr/local/etc/rtl_airband-pulse.conf
+let "n++"
 done
 
 #bottom of the file
 echo "  );
  }
-);" >> /usr/local/etc/rtl_airband.conf
+);" >> /usr/local/etc/rtl_airband-pulse.conf
 
 }
 
 buildconf1(){
-DEVICE=$(zenity --forms --height 300 --width 500 \
---title="Multichannel Voice - Configure For Icecast" \
---separator="," \
---text="Output will be sent to Icecast.
-First, use the SDR Operating Parameters application
-to enter your device type, PPM offset, and gain.  Then
-fill in the fields below to start monitoring." \
---add-entry="Device Center Frequency (MHz):" \
---add-entry="Number of channels (1 or more):" \
---add-entry="Stream Name:" \
---add-entry="Genre:" \
-);
-
-if [[ "$?" -ne "0" || -z "$?" ]]; then
-    notifyerror
-    stop
-fi
-
-ctrfreq=$(awk -F, '{printf "%8.3f\n", $1}' <<<$DEVICE)
-channels=$(awk -F, '{print $2}' <<<$DEVICE)
-streamname=$(awk -F, '{print $3}' <<<$DEVICE)
-genre=$(awk -F, '{print $4}' <<<$DEVICE)
-
+# data and config for icecast
 #top of the file, defining SDR tuning, etc
 echo '# This is a sample configuration file for RTLSDR-Airband.
 # Just a single SDR with multiple AM channels in multichannel mode.
@@ -238,38 +205,21 @@ mixers: {
 devices:
 ({
   type = "soapysdr";
-  device_string = "driver='$devdriver','$devkey'";
+  device_string = "driver='$devdriver',device_id='$devkey'";
   gain = '$gain';
   centerfreq = '$ctrfreq';
   correction = '$corr';
   channels:
-  (' > /usr/local/etc/rtl_airband.conf
+  (' > /usr/local/etc/rtl_airband-icecast.conf
 
-for (( n=1; n <= $channels; ++n ))
-do
-
-CHNLDATA=$(zenity --forms --title="RTLSDR-Airband - Channel $n Data" \
---separator="," \
---text="Enter the data for channel $n.
-Frequencies must be within +/- 1.25 MHz
-of center frequency $ctrfreq.
-
-Example:   Frequency (MHz): 120.6
-           Mode (am,fm:): am" \
---add-entry="Channel $n Frequency (MHz):" \
---add-entry="Channel $n Mode (am,fm):" \
-);
-
-if [[ "$?" -ne "0" || -z "$?" ]]; then
-    notifyerror
-    stop
-fi
-
-freq=$(awk -F, '{printf "%8.3f\n", $1}' <<<$CHNLDATA)
-mode=$(awk -F, '{print $2}' <<<$CHNLDATA)
-
+#write the channel and mode confifig data here...
+n=1
 comma=","
-if (($n == $channels)); then
+for thechannel in ${FREQLIST[@]}; do
+freq=$(echo $thechannel | cut -f1 -d ",")
+mode=$(echo $thechannel | cut -f2 -d ",")
+
+if (( $n == $channels )); then
      comma=""
 fi
 
@@ -280,7 +230,7 @@ if [[ $(( $n % 2 )) -eq 0 ]];
 fi
 
 # for one channel use mono
-if (($channels == 1));
+if (( $channels == 1 ));
 	then bal="0.0"
 fi
 
@@ -295,14 +245,15 @@ echo '{
 	  balance = '$bal';
 	}
       );
-    }'$comma >> /usr/local/etc/rtl_airband.conf
+    }'$comma >> /usr/local/etc/rtl_airband-icecast.conf
 
+let "n++"
 done
 
 #bottom of the file
 echo '  );
  }
-);' >> /usr/local/etc/rtl_airband.conf
+);' >> /usr/local/etc/rtl_airband-icecast.conf
 }
 
 backupconf(){
@@ -320,13 +271,16 @@ notifyerror(){
 		--text="Something went wrong!!!!!!");
 }
 
-ans=$(zenity --list --title "Multichannel Voice" --height 400 --width 500 \
+ans=$(zenity --list --title "Multichannel Voice" --height 420 --width 500 \
 --text "Multichannel Voice functions:
 --Uses SoapySDR drivers
 --Simultaneous multichannel demodulation
 --Set demodulation independently per channel
 --Stereo mixing for for multiple channels
 --Softwaare powered by \"RTLSDR-Airband\"
+--Edit the frequencies in ~/Documents/VOICE_FREQS
+  The format is one frequency and mode per line, comma separated.
+
 " \
 --radiolist  --column "Pick" --column "Action" \
 TRUE "Start Multichannel Voice (PulseAudio)" \
