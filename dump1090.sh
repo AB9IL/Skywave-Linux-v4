@@ -22,9 +22,18 @@ startlog() {
 # run dump1090
 mkfifo /tmp/1090.dump
 sleep 1
-rx_sdr -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey /tmp/1090.dump | dump1090 --net --net-sbs-port=30003 --ifile=/tmp/1090.dump &
+rx_sdr -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey /tmp/1090.dump | dump1090 --net --net-sbs-port=30003 &
 sleep 1
-nc 127.0.0.1 30003 | egrep --line-buffered 'MSG,1|MSG,3|MSG,4|MSG,6' >> ~/adsb.log &
+nc 127.0.0.1 30003 | egrep --line-buffered 'MSG,1|MSG,3|MSG,4|MSG,6' >> $HOME/adsb.log &
+}
+
+start_decoded_log() {
+# run dump1090
+rx_sdr -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey /tmp/1090.dump | dump1090 --net --net-sbs-port=30003 &
+sleep 1
+/usr/local/bin/dump1090-stream-parser &
+sleep 1
+sqlitebrowser $HOME/adsb_messages.db &
 }
 
 startplot() {
@@ -69,22 +78,27 @@ notifyerror(){
 }
 
 stop(){
-killall dump1090 rx_sdr nc
+killall -9 dump1090 rx_sdr nc sqlitebrowser
+pkill -f /usr/local/bin/dump1090-stream-parser
 exit
 }
 
-ans=$(zenity  --list  --title "Dump1090" --height=200 --width=400 \
+ans=$(zenity  --list  --title "Dump1090" --height=275 --width=450 \
 --text "Manage ADS-B logging and plotting.
 First, use the SDR Operating Parameters application
 to enter your device type, PPM offset, and gain.
 Select a monitoring action from the list below." \
 --radiolist  --column "Pick" --column "Action" \
-FALSE "Start Dump1090 and write to a logfile." \
+FALSE "Start Dump1090 and write raw data to a logfile." \
+FALSE "Start Dump1090 and write decoded data to a database." \
 FALSE "Start Dump1090 and plot aircraft positions." \
 TRUE "Stop Dump1090");
 
-	if [  "$ans" = "Start Dump1090 and write to a logfile." ]; then
+	if [  "$ans" = "Start Dump1090 and write raw data to a logfile." ]; then
 		startlog
+
+	elif [  "$ans" =  "Start Dump1090 and write decoded data to a database." ]; then
+		start_decoded_log
 
 	elif [  "$ans" = "Start Dump1090 and plot aircraft positions." ]; then
 		startplot
