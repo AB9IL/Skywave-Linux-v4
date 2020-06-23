@@ -3,26 +3,22 @@
 TIME=$(date +%Y-%m-%d_%H-%M-%S)
 
 case "$1" in
-	-h*|-H*)
+	--trim)
 		if [[ "$2" -ne "0" || -z "$2" ]]; then
-			echo "usage: make-podcast <record | trim> <audiofile> <start time hh:mm:ss> <end time hh:mm:ss>"
-			echo "The record function compands and saves audio in wav format."
-			echo "The trim function also converts audio to mp3 format."
+			echo "Missing or incorrect parameters"
 			exit
 		fi
-	;;
-	trim)
 		echo "file: $2, start: $3, end: $4"
-		# Trim, compand, and convert to mp3 in FFMPEG
+		# Trim the file, keeping only start to end times
 		ffmpeg -y \
 			-i "$2" \
 			-ss "$3" \
 			-to "$4" \
-			-acodec libmp3lame \
-			-b:a 128k \
-			output.mp3
+			-acodec pcm_s16le \
+			audio_trimmed_$TIME.wav
+			exit
 	;;
-	record)
+	--record)
 		echo "Recording from Pulseaudio, processing in FFMPEG..."
 		# Recording raw audio data with FFMPEG
 		ffmpeg -y \
@@ -32,6 +28,28 @@ case "$1" in
 			-i default \
 			-filter_complex "compand=attacks=0:points=-60/-40|-30/-15|-15/-10|-5/-8|0/-6" \
 			-acodec pcm_s16le \
-			audio_$TIME.wav
+			audio_recorded_$TIME.wav
+			exit
+	;;
+	--convert)
+		if [[ -z "$2" ]]; then
+			echo "Missing or incorrect parameters"
+			exit
+		fi
+		echo "file: $2, convert to mp3"
+		# Trim the file, keeping only start to end times
+		ffmpeg -y \
+			-i "$2" \
+			-acodec libmp3lame \
+			-b:a 128k \
+			audio_converted_$TIME.mp3
+			exit
+	;;
+	*)
+		echo "usage: make-podcast < --record | --trim | --convert| --help > < audiofile > < start time hh:mm:ss > < end time hh:mm:ss >"
+		echo "--record:     compands and saves audio in wav format"
+		echo "--trim:       keeps audio between start and end times in wav format"
+		echo "--convert:    converts audio from wav to mp3"
+		exit
 	;;
 esac
