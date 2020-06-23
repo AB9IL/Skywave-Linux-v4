@@ -3,15 +3,11 @@
 TIME=$(date +%Y-%m-%d_%H-%M-%S)
 
 case "$1" in
-	-h*|-H*)
+	--trim)
 		if [[ "$2" -ne "0" || -z "$2" ]]; then
-			echo "usage: make-screencast <record | trim> <videofile> <start time hh:mm:ss> <end time hh:mm:ss>"
-			echo "The script will record or trim the vidio, saving it as an mp4 file."
-			echo "Run only once, not repeatedly on a file! Loss of quality will result!"
+			echo "Missing or incorrect parameters."
 			exit
 		fi
-	;;
-	trim)
 		echo "file: $2, start: $3, end: $4"
 		# Trim to specific start and end times in FFMPEG.
 		ffmpeg -y \
@@ -21,10 +17,12 @@ case "$1" in
 			-to "$4" \
 			-acodec copy \
 			-vcodec copy \
+			-movflags faststart \
 			-avoid_negative_ts make_zero \
 			video_trimmed_$TIME.mp4
+			exit
 	;;
-	record)	
+	--record)	
 		# capture screen data
 		ffmpeg -y \
 			-f x11grab \
@@ -36,5 +34,12 @@ case "$1" in
 			-c:v libx264 -r 30 \
 			-c:a mp3 \
 			video_capture_$TIME.mp4
+			exit
+	;;
+	*)
+		echo "usage: make-screencast < --record | --trim > < videofile > < start time hh:mm:ss > < end time hh:mm:ss >"
+		echo "The script will record or trim the video, saving it as an mp4 file."
+		echo "Trim only the original, not trimmed output, otherwise loss of quality will result!"
+		exit
 	;;
 esac
