@@ -17,10 +17,13 @@ corr=$(cat /usr/local/etc/sdr_offset)
 gain=$(cat /usr/local/etc/sdr_gain)
 #Get the SoapySDR driver string
 devdriver=$(cat /usr/local/etc/sdr_driver)
-#Get the SoapySDR key number
+#Get the SoapySDR device key, such as "rtl=0"
 devkey=$(cat /usr/local/etc/sdr_key)
+# strip the number from the device key
+key=$(echo $devkey | cut -f2 -d "=")
+
 #Get the frequency and mode list
-readarray FREQLIST < ~/Documents/VOICE_FREQS
+readarray FREQLIST < /usr/local/etc/VOICE_FREQS
 
 # compute the median frequency here...
 MYLIST=()
@@ -47,69 +50,70 @@ start0(){
 #start rtlsdr-airband on PulseAudio
 cp -f /usr/local/etc/rtl_airband-pulse.conf /usr/local/etc/rtl_airband.conf
 /usr/local/bin/rtl_airband &
+# Force pulseaudio and rtl_airband to work
+sleep 3
+/etc/init.d/alsa-utils restart
+pulseaudio -k
+# Remind the user to stop manually.
 WINDOW=$(zenity --info --height 100 --width 350 \
 --title="Multichannel Voice - Running" \
 --text="The multichannel receiver is running.
+Output is on PulseAudio.
 To stop, use this application and select \"Stop Multichannel Voice.\""
 );
 }
 
 start1(){
-#start rtlsdr-airband on the icecast server
+#start rtlsdr-airband on the Icecast server
 cp -f /usr/local/etc/rtl_airband-icecast.conf /usr/local/etc/rtl_airband.conf
-service icecast2 start
+systemctl start icecast2
 sleep 3
 #start rtlsdr-airband
 /usr/local/bin/rtl_airband &
 sleep 3
-firefox --new-tab http://127.0.0.1:8000
-stop
-}
-
-start2(){
-#build the config file for using PulseAudio
-buildconf0
-# copy the new config file
-cp -f /usr/local/etc/rtl_airband-pulse.conf /usr/local/etc/rtl_airband.conf
-#start rtlsdr-airband
-/usr/local/bin/rtl_airband &
+firefox --new-tab http://localhost:7000/mixer1.mp3 &
+# Remind the user to stop manually.
 WINDOW=$(zenity --info --height 100 --width 350 \
 --title="Multichannel Voice - Running" \
 --text="The multichannel receiver is running.
+Output is on the Icecast server.
 To stop, use this application and select \"Stop Multichannel Voice.\""
 );
 }
 
+start2(){
+#build the config file for using PulseAudio
+build_pulse
+#start reception with output on PulseAudio
+start0
+}
+
 start3(){
-#build the config file for using icecast
-buildconf1
-cp -f /usr/local/etc/rtl_airband-icecast.conf /usr/local/etc/rtl_airband.conf
-#start rtlsdr-airband
-service icecast2 start
-sleep 3
-#start rtlsdr-airband
-/usr/local/bin/rtl_airband &
-sleep 3
-firefox --new-tab http://127.0.0.1:8000
+#build the config file for using Icecast
+build_icecast
+#start reception and output on Icecast
+start1
 }
 
 stop(){
 #stop rtlsdr-airband
-killall rtl_airband
+killall -9 rtl_airband $(lsof -t -i:8000)
 #stop the icecast2 server
-service icecast2 stop
-sleep 2
+systemctl stop icecast2
 echo "STOPPED RTLSDR-Airband. Alpha Mike Foxtrot..."
 exit
 }
 
-buildconf0(){
+build_pulse(){
 # data and config for PulseAudio
 #top of the file, defining SDR tuning, etc
 echo '# This is a sample configuration file for RTLSDR-Airband.
 # Just a single SDR with multiple AM channels in multichannel mode.
 # Each channel is sent to PulseAusio. Settings are described
 # in reference.conf.
+
+# increase fft size (min 256, max 8192)
+fft_size = 1024
 
 mixers: {
   mixer1: {
@@ -126,98 +130,19 @@ mixers: {
 devices:
 ({
   type = "soapysdr";
-  device_string = "driver='$devdriver',device_id='$devkey'";
+  device_string = "driver='$devdriver',soapy='$key'";
   gain = '$gain';
   centerfreq = '$ctrfreq';
   correction = '$corr';
   channels:
   (' > /usr/local/etc/rtl_airband-pulse.conf
 
-#write the channel and mode confifig data here...
+#write the channel and signal modulation confifig data here...
 n=1
 comma=","
 for thechannel in ${FREQLIST[@]}; do
 freq=$(echo $thechannel | cut -f1 -d ",")
-mode=$(echo $thechannel | cut -f2 -d ",")
-
-if (( $n == $channels )); then
-     comma=""
-fi
-
-# for multiple channels use stereo
-if [[ $(( $n % 2 )) -eq 0 ]];
-	then bal="+0.6" ;
-	else bal="-0.6" ;
-fi
-
-# for one channel use mono
-if (( $channels == 1 ));
-	then bal="0.0"
-fi
-
-# middle of the file, defining channels and outputs
-echo '    {
-      freq = '$freq';
-      mode = "'$mode'";
-      outputs: (
-    {
-	  type = "mixer";
-	  name = "mixer1";
-	  balance = '$bal';
-	}
-      );
-    }'$comma >> /usr/local/etc/rtl_airband-pulse.conf
-let "n++"
-done
-
-#bottom of the file
-echo "  );
- }
-);" >> /usr/local/etc/rtl_airband-pulse.conf
-
-}
-
-buildconf1(){
-# data and config for icecast
-#top of the file, defining SDR tuning, etc
-echo '# This is a sample configuration file for RTLSDR-Airband.
-# Just a single SDR with multiple AM channels in multichannel mode.
-# Each channel is sent to the Icecast server. Settings are described
-# in reference.conf.
-
-mixers: {
-  mixer1: {
-    outputs: (
-        {
-	      type = "icecast";
-	      server = "localhost";
-          port = 8000;
-          mountpoint = "mixer1.mp3";
-          stream_name = "'$streamname'";
-          genre = "'$genre'";
-          username = "source";
-          password = "skywave";
-	}
-    );
-  }
-};
-
-devices:
-({
-  type = "soapysdr";
-  device_string = "driver='$devdriver',device_id='$devkey'";
-  gain = '$gain';
-  centerfreq = '$ctrfreq';
-  correction = '$corr';
-  channels:
-  (' > /usr/local/etc/rtl_airband-icecast.conf
-
-#write the channel and mode confifig data here...
-n=1
-comma=","
-for thechannel in ${FREQLIST[@]}; do
-freq=$(echo $thechannel | cut -f1 -d ",")
-mode=$(echo $thechannel | cut -f2 -d ",")
+sigmode=$(echo $thechannel | cut -f2 -d ",")
 
 if (( $n == $channels )); then
      comma=""
@@ -237,7 +162,89 @@ fi
 # middle of the file, defining channels and outputs
 echo '{
       freq = '$freq';
-      mode = "'$mode'";
+      modulation = "'$sigmode'";
+      outputs: (
+    {
+	  type = "mixer";
+	  name = "mixer1";
+	  balance = '$bal';
+	}
+      );
+    }'$comma >> /usr/local/etc/rtl_airband-pulse.conf
+
+let "n++"
+done
+
+#bottom of the file
+echo '  );
+ }
+);' >> /usr/local/etc/rtl_airband-pulse.conf
+}
+
+build_icecast(){
+# data and config for icecast
+#top of the file, defining SDR tuning, etc
+echo '# This is a sample configuration file for RTLSDR-Airband.
+# Just a single SDR with multiple AM channels in multichannel mode.
+# Each channel is sent to the Icecast server. Settings are described
+# in reference.conf.
+
+# increase fft size (min 256, max 8192)
+fft_size = 1024
+
+mixers: {
+  mixer1: {
+    outputs: (
+        {
+	      type = "icecast";
+	      server = "localhost";
+          port = 7000;
+          mountpoint = "mixer1.mp3";
+          name = "'$streamname'";
+          genre = "'$genre'";
+          username = "source";
+          password = "skywave";
+	}
+    );
+  }
+};
+
+devices:
+({
+  type = "soapysdr";
+  device_string = "driver='$devdriver',soapy='$key'";
+  gain = '$gain';
+  centerfreq = '$ctrfreq';
+  correction = '$corr';
+  channels:
+  (' > /usr/local/etc/rtl_airband-icecast.conf
+
+#write the channel and mode confifig data here...
+n=1
+comma=","
+for thechannel in ${FREQLIST[@]}; do
+freq=$(echo $thechannel | cut -f1 -d ",")
+sigmode=$(echo $thechannel | cut -f2 -d ",")
+
+if (( $n == $channels )); then
+     comma=""
+fi
+
+# for multiple channels use stereo
+if [[ $(( $n % 2 )) -eq 0 ]];
+	then bal="+0.6" ;
+	else bal="-0.6" ;
+fi
+
+# for one channel use mono
+if (( $channels == 1 ));
+	then bal="0.0"
+fi
+
+# middle of the file, defining channels and outputs
+echo '{
+      freq = '$freq';
+      modulation = "'$sigmode'";
       outputs: (
     {
 	  type = "mixer";
@@ -271,44 +278,48 @@ notifyerror(){
 		--text="Something went wrong!!!!!!");
 }
 
-ans=$(zenity --list --title "Multichannel Voice" --height 420 --width 500 \
+ans=$(zenity --list --title "Multichannel Voice" --height 480 --width 500 \
 --text "Multichannel Voice functions:
 --Uses SoapySDR drivers
 --Simultaneous multichannel demodulation
 --Set demodulation independently per channel
 --Stereo mixing for for multiple channels
 --Softwaare powered by \"RTLSDR-Airband\"
---Edit the frequencies in ~/Documents/VOICE_FREQS
+--Edit the frequencies in /usr/local/etc/VOICE_FREQS
   The format is one frequency and mode per line, comma separated.
 
+Frequencies:
+$(echo ${FREQLIST[@]})
 " \
 --radiolist  --column "Pick" --column "Action" \
-TRUE "Start Multichannel Voice (PulseAudio)" \
-FALSE "Start Multichannel Voice (Icecast)" \
+FALSE "Start Multichannel Voice (PulseAudio)" \
 FALSE "Set channels and start Multichannel Voice (PulseAudio)" \
-FALSE "Set channels and start Multichannel Voice (Icecast)" \
-FALSE "Backup the current config file." \
-FALSE "Restore the config file from a backup." \
-FALSE "Stop Multichannel Voice" \
+FALSE "Backup the current config file" \
+FALSE "Restore the config file from a backup" \
+FALSE "Edit the frequency list" \
+TRUE "Stop Multichannel Voice" \
 );
 
 	if [  "$ans" = "Start Multichannel Voice (PulseAudio)" ]; then
 		start0
 
-	elif [  "$ans" = "Start Multichannel Voice (Icecast)" ]; then
-		start1
+#	elif [  "$ans" = "Start Multichannel Voice (Icecast)" ]; then
+#		start1
 
 	elif [  "$ans" = "Set channels and start Multichannel Voice (PulseAudio)" ]; then
 		start2
 
-	elif [  "$ans" = "Set channels and start Multichannel Voice (Icecast)" ]; then
-		start3
+#	elif [  "$ans" = "Set channels and start Multichannel Voice (Icecast)" ]; then
+#		start3
 
-	elif [  "$ans" = "Backup the current config file." ]; then
+	elif [  "$ans" = "Backup the current config file" ]; then
 		backupconf
 
-	elif [  "$ans" = "Restore the config file from a backup." ]; then
+	elif [  "$ans" = "Restore the config file from a backup" ]; then
 		restoreconf
+
+	elif [  "$ans" = "Edit the frequency list" ]; then
+		mate-terminal -e "nano /usr/local/etc/VOICE_FREQS"
 
 	elif [  "$ans" = "Stop Multichannel Voice" ]; then
 		stop
