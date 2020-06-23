@@ -18,17 +18,17 @@ user_pref("network.proxy.ftp_port", 0);
 user_pref("network.proxy.http", "127.0.0.1");
 user_pref("network.proxy.http_port", 8118);
 user_pref("network.proxy.share_proxy_settings", true);
-user_pref("network.proxy.socks", "");
-user_pref("network.proxy.socks_port", 0);
+user_pref("network.proxy.socks", "127.0.0.1");
+user_pref("network.proxy.socks_port", 31519);
 user_pref("network.proxy.ssl", "127.0.0.1");
 user_pref("network.proxy.ssl_port", 8118);
 user_pref("network.proxy.type", 1);
 user_pref("network.proxy.no_proxies_on", "localhost,127.0.0.1");' > /usr/local/etc/firefox/user.js
-echo 'Acquire {
+sudo echo 'Acquire {
 HTTP::proxy "http://127.0.0.1:8118";
 HTTPS::proxy "http://127.0.0.1:8118";
 }' > /etc/apt/apt.conf.d/proxy.conf
-sh -c "lantern -addr=127.0.0.1:8118"
+sh -c "lantern -obfs4-distBias -addr 127.0.0.1:8118 -socksaddr 127.0.0.1:31519"
 lanternstop
 }
 
@@ -47,7 +47,7 @@ user_pref("network.proxy.socks_port", 0);
 user_pref("network.proxy.ssl", "");
 user_pref("network.proxy.ssl_port", 0);
 user_pref("network.proxy.type", 5);' > /usr/local/etc/firefox/user.js
-rm -rf /etc/apt/apt.conf.d/proxy.conf
+sudo rm -rf /etc/apt/apt.conf.d/proxy.conf
 exit
 }
 
