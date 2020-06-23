@@ -36,7 +36,7 @@ key=$(echo $devkey | cut -f2 -d "=")
 
 zero="0"
 ans=$(zenity  --list  --title="RTLSDR Multichannel Digital Decoders" \
---height 430 --width 400 \
+--height 450 --width 400 \
 --text="ACARSdec and VDLM2dec functions:
 -- ACARSdec decodes ACARS
 -- VDLM2dec decodes VDL Mode 2
