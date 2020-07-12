@@ -4,8 +4,17 @@ Scripts providing efficient, powerful, yet user friendly software defined radio 
 #### aeromodes.sh:
 Requires acarsdec and vdlm2dec.  Simultaneous and multichannel ACARS or VDL Mode 2 data capture.
 
+### ais-file-decoder:
+Requires python3 with modules ais and json.  AIS file decoder converts logs of NMEA data to decoded json format.
+
+### ais-fileto-sqlite:
+Requires python3 and modules ais, sqlite3, and json. AIS file decoder converts logs of NMEA data to an sqlite database file.
+
+### ais-mapper:
+Requires python3 and modules folium, pandas, and numpy. 
+
 #### ais_monitor.sh:
-Requires rtl-ais.  Simultaneous dual channel ais maritime data capture.
+Requires rtl-ais.  Simultaneous dual channel ais maritime data capture.  The ais-mapper reads a file of decoded NMEA sentences containing AIS data, builds a dataframe, and plots vessels according to mmsi, name, latitude, and longitude.
 
 #### dump1090.sh:
 Requires dump1090 and dump1090-stream-parser.  Capture, parse, and save aeronautical ADS-B data.
@@ -14,8 +23,7 @@ Requires dump1090 and dump1090-stream-parser.  Capture, parse, and save aeronaut
 Requires kalibrate-rtl.  Uses the GSM mobile phone network to measure rtl-sdr frequency offsets.
 
 #### lantern-controller.sh:
-Requires Lantern.  Configures Firefox networking settings and starts / stops Lantern such that it
-runs on specific ports and is terminated cleanly.
+Requires Lantern.  Configures Firefox networking settings and starts / stops Lantern such that it runs on specific ports and is terminated cleanly.
 
 #### make-podcast:
 Requires FFMPEG.  Trims and processes audio for easier podcast creation.
