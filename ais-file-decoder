@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2019 by Philip Collier, radio AB9IL <webmaster@ab9il.net>
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version. There is NO warranty; not even for
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+import datetime
+import sys
+import json
+import ais
+
+stime = datetime.datetime.now()
+print('AIS file decoder converts logs of NMEA data to decoded json format.')
+print('Usage: ais-file-decoder < inputfile >')
+nmeafile = sys.argv[1]
+outfile = str(stime) + '-decoded.json'
+
+# decode raw nmea sentences from a file; save to a json file
+q = ais.nmea_queue.NmeaQueue()
+with open(nmeafile) as infile:
+    with open(outfile, 'w+') as filehandle:
+        for msg in infile:
+            q.put(msg)
+            if q.qsize():
+                d = q.get().get('decoded', None)
+                json.dump(d, filehandle)
+                filehandle.write('\n')
+
+
+runtime = 'Elapsed Runtime: ' + str(datetime.datetime.now() - stime)
+print(outfile, 'written.', runtime)
+

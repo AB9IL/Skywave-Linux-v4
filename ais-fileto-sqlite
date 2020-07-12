@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+# Copyright (c) 2019 by Philip Collier, radio AB9IL <webmaster@ab9il.net>
+# This is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version. There is NO warranty; not even for
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+import datetime
+import json
+import sqlite3
+import sys
+import ais
+
+stime = datetime.datetime.now()
+print('AIS file decoder converts logs of NMEA data to an sqlite database file.')
+print('Usage: ais-file-decoder < inputfile >')
+nmeafile = sys.argv[1]
+outfile = str(stime) + '-decoded-ais.db'
+
+outdata = []
+# decode and print from raw nmea sentences from a file
+q = ais.nmea_queue.NmeaQueue()
+with open(nmeafile) as infile:
+    for msg in infile:
+        q.put(msg)
+        if q.qsize():
+            d = q.get().get('decoded', None)
+            outdata.append(d)
+
+# create a database file
+conn = sqlite3.connect(outfile)
+cursor = conn.cursor()
+
+cursor.execute("CREATE TABLE IF NOT EXISTS VESSELS( \
+    MMSI INT IGNORE, \
+    NAME STRING IGNORE, \
+    LATITUDE REAL IGNORE, \
+    LONGITUDE REAL IGNORE, \
+    YEAR INT IGNORE, \
+    MONTH INT IGNORE, \
+    DAY INT IGNORE, \
+    HOUR INT IGNORE, \
+    MINUTE INT IGNORE, \
+    SECOND INt IGNORE);")
+
+conn.commit()
+
+# replace missing keys or empty keys with nans
+for things in outdata:
+    keys = ['mmsi', 'name', 'y', 'x', 'year', 'month', 'day', 'hour', \
+            'minute', 'second']
+
+    for key in keys:
+        try:
+            if key not in things:
+                things[key] = 'NaN'
+        except Exception as E:
+            print('Missing key', key)
+
+    try:
+        cursor.execute("INSERT INTO VESSELS values (?,?,?,?,?,?,?,?,?,?)", \
+            (things['mmsi'], things['name'], things['y'], things['x'], \
+             things['year'], things['month'], things['day'], things['hour'], \
+             things['minute'], things['second']))
+    except Exception as E:
+        print('Error inserting data into db:', E)
+        pass
+
+# close the database
+conn.commit()
+
+runtime = 'Elapsed Runtime: ' + str(datetime.datetime.now() - stime)
+print(outfile, 'written.', runtime)
+
