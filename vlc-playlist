@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Open VLC command line interface and run the playlist
+mate-terminal -e "nvlc --no-color --loop --repeat --playlist-autostart /home/$(whoami)/Music/Radio.xspf"
