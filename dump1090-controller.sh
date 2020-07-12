@@ -19,24 +19,22 @@ devdriver=$(cat /usr/local/etc/sdr_driver)
 devkey=$(cat /usr/local/etc/sdr_key)
 #Get the receiver position
 readarray -t devposition < /usr/local/etc/sdr_posn
+fifo='/run/dump1090/1090.dump'
 
 startlog() {
 # run dump1090
-mkfifo /tmp/1090.dump
-sleep 1
-rx_sdr -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey /tmp/1090.dump | \
-	dump1090 --net --net-sbs-port 30003 --fix &
-sleep 1
+mkfifo -m 666 $fifo
+rx_sdr -F CU8 -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey $fifo &
+cat $fifo | dump1090 --net-sbs-port 30003 --fix &
 nc 127.0.0.1 30003 | egrep --line-buffered 'MSG,1|MSG,3|MSG,4|MSG,6' >> $HOME/adsb.log &
 }
 
 start_decoded_log() {
 # run dump1090
-rx_sdr -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey /tmp/1090.dump | \
-	dump1090 --net --net-sbs-port 30003 --fix &
-sleep 1
+mkfifo -m 666 $fifo
+rx_sdr -F CU8 -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey $fifo &
+cat $fifo | dump1090 --net --net-sbs-port 30003 --fix &
 /usr/local/bin/dump1090-stream-parser &
-sleep 1
 sqlitebrowser $HOME/adsb_messages.db &
 }
 
@@ -54,8 +52,9 @@ sed -i "
 	38s/.*/DefaultCenterLon = $longitude;/ ;" /usr/local/share/dump1090/html/config.js
 
 # run dump1090
-rx_sdr -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey /tmp/1090.dump | \
-	dump1090 --net --net-sbs-port 30003 --write-json /run/dump1090 --fix &
+mkfifo -m 666 $fifo
+rx_sdr -F CU8 -f 1090000000 -s 2048000 -p $ppm -g $gain -d driver=$devdriver','$devkey $fifo &
+cat $fifo | dump1090 --net --net-sbs-port 30003 --write-json /run/dump1090 --fix &
 
 # Open the map in firefox
 firefox --new-tab http://localhost/dump1090/ &
@@ -76,6 +75,7 @@ notifyerror(){
 stop(){
 killall -9 dump1090 rx_sdr rtl_sdr rtl_tcp $(lsof -t -i:30003) sqlitebrowser
 pkill -f /usr/local/bin/dump1090-stream-parser
+rm -f $fifo
 exit
 }
 
