@@ -32,12 +32,12 @@ cd /usr/local/sbin/psiphon/
 mate-terminal -e  'sh -c "echo \"Psiphon is connected if Tunnels {\"count\":1}. \
 CTRL-C to exit Psiphon and clear the system proxy settings.\n\n\"; \
 cd /usr/local/sbin/psiphon/ ; \
-./psiphon-tunnel-core-i686 -config psiphon.config -serverList remote_server_list -formatNotices; read line"'
+./psiphon-tunnel-core-x86_64 -config psiphon.config -serverList remote_server_list -formatNotices; read line"'
 psiphonstop
 }
 
 psiphonstop(){
-sudo killall psiphon-tunnel-core-i686
+sudo killall psiphon-tunnel-core-x86_64
 export http_proxy=
 export https_proxy=
 echo '//Clear the proxy prefs
