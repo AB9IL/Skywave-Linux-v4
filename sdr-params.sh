@@ -48,7 +48,7 @@ sed -i "s/corr_freq=.*/corr_freq=${offset}000000/g" ~/.config/gqrx/default.conf 
 
 notifyerror(){
 echo "Something went wrong: $problem"
-	WINDOW=$(zenity --info --height 100 --width 350 \
+	WINDOW=$(zenity --info --height 100 --width 400 \
 	--title="Calibration and Gain" \
 	--text="Something went wrong:
 $problem");
