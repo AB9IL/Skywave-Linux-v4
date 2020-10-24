@@ -156,22 +156,9 @@ FALSE "Read a file containing AIS NMEA sentences, decode, and write to a json fi
 FALSE "Plot decoded AIS info on a map." \
 TRUE "Stop AIS capture and logging.");
 
-	if [  "$ans" = "Capture AIS NMEA sentences by radio, decode, and write to a logfile." ]; then
-		dumpto_file
-
-	elif [  "$ans" = "Capture AIS NMEA sentences by radio, decode, and write to a database." ]; then
-		dumpto_db
-
-	elif [  "$ans" = "Read a file containing AIS NMEA sentences, decode, and write to a database." ]; then
-		readto_db
-
-	elif [  "$ans" = "Read a file containing AIS NMEA sentences, decode, and write to a json file." ]; then
-		readto_json
-
-	elif [  "$ans" = "Plot decoded AIS info on a map." ]; then
-		startmapper
-
-	elif [  "$ans" = "Stop AIS capture and logging." ]; then
-		stopcapture
-
-	fi
+[[ "$ans" == "Capture AIS NMEA sentences by radio, decode, and write to a logfile." ]] && dumpto_file
+[[ "$ans" == "Capture AIS NMEA sentences by radio, decode, and write to a database." ]] && dumpto_db
+[[ "$ans" == "Read a file containing AIS NMEA sentences, decode, and write to a database." ]] && readto_db
+[[ "$ans" == "Read a file containing AIS NMEA sentences, decode, and write to a json file." ]] && readto_json
+[[ "$ans" == "Plot decoded AIS info on a map." ]] && startmapper
+[[ "$ans" == "Stop AIS capture and logging." ]] && stopcapture
