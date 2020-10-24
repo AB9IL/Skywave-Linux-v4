@@ -230,34 +230,20 @@ FALSE "Manually program the SDR gain." \
 FALSE "Manually program the SoapySDR device data." \
 FALSE "Manually program geographic coordinates.");
 
-	if [  "$ans" = "Scan for GSM 850 MHz base stations." ]; then
-		band='GSM850'
-		scan_band
+[[ "$ans" == "Scan for GSM 850 MHz base stations." ]] && band='GSM850' && scan_band
 
-	elif [  "$ans" = "Scan for GSM 900 MHz base stations." ]; then
-		band='GSM900'
-		scan_band
+[[ "$ans" == "Scan for GSM 900 MHz base stations." ]] && band='GSM900' && scan_band
 
-	elif [  "$ans" = "Scan for E-GSM base stations." ]; then
-		band='EGSM'
-		scan_band
+[[ "$ans" == "Scan for E-GSM base stations." ]] && band='EGSM' && scan_band
 
-	elif [  "$ans" = "Check SoapySDR device information." ]; then
-		check_soapy
+[[ "$ans" == "Check SoapySDR device information." ]] && check_soapy
 
-	elif [  "$ans" = "Toggle RTLSDR bias tee on or off." ]; then
-		toggle_tee
+[[ "$ans" == "Toggle RTLSDR bias tee on or off." ]] && toggle_tee
 
-	elif [  "$ans" = "Manually program the SDR offset." ]; then
-		set_offset
+[[ "$ans" == "Manually program the SDR offset." ]] && set_offset
 
-	elif [  "$ans" = "Manually program the SDR gain." ]; then
-		set_gain
+[[ "$ans" == "Manually program the SDR gain." ]] && set_gain
 
-	elif [  "$ans" = "Manually program the SoapySDR device data." ]; then
-		set_device
+[[ "$ans" == "Manually program the SoapySDR device data." ]] && set_device
 
-	elif [  "$ans" = "Manually program geographic coordinates." ]; then
-		set_position
-
-	fi
+[[ "$ans" == "Manually program geographic coordinates." ]] && set_position
