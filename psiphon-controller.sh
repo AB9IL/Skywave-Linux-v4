@@ -10,8 +10,14 @@
 Encoding=UTF-8
 
 psiphonstart(){
-export http_proxy=127.0.0.1:8118
 export https_proxy=127.0.0.1:8118
+export HTTPS_PROXY=127.0.0.1:8118
+export http_proxy=127.0.0.1:8118
+export HTTP_PROXY=127.0.0.1:8118
+export socks_proxy=127.0.0.1:31519
+export SOCKS_PROXY=127.0.0.1:31519
+export NO_PROXY='localhost, 127.0.0.1'
+export no_proxy='localhost, 127.0.0.1'
 echo '//Set the proxy prefs
 user_pref("network.proxy.ftp", "127.0.0.1");
 user_pref("network.proxy.ftp_port", 8118);
@@ -24,22 +30,24 @@ user_pref("network.proxy.ssl", "127.0.0.1");
 user_pref("network.proxy.ssl_port", 8118);
 user_pref("network.proxy.type", 1);
 user_pref("network.proxy.no_proxies_on", "localhost,127.0.0.1");' > /usr/local/etc/firefox/user.js
-echo 'Acquire {
-HTTP::proxy "http://127.0.0.1:8118";
-HTTPS::proxy "http://127.0.0.1:8118";
-}' > /etc/apt/apt.conf.d/proxy.conf
-cd /usr/local/sbin/psiphon/
-mate-terminal -e  'sh -c "echo \"Psiphon is connected if Tunnels {\"count\":1}. \
-CTRL-C to exit Psiphon and clear the system proxy settings.\n\n\"; \
-cd /usr/local/sbin/psiphon/ ; \
-./psiphon-tunnel-core-x86_64 -config psiphon.config -serverList remote_server_list -formatNotices; read line"'
+x-terminal-emulator -e bash -c "echo \"Psiphon is connected if Tunnels {\"count\":1}.
+CTRL-C to exit Psiphon and clear the system proxy settings.\"; \
+echo\"\"; cd /usr/local/sbin/psiphon/; \
+./psiphon-tunnel-core-x86_64 -config psiphon.config \
+-serverList remote_server_list -formatNotices; read line"
 psiphonstop
 }
 
 psiphonstop(){
 sudo killall psiphon-tunnel-core-x86_64
-export http_proxy=
 export https_proxy=
+export HTTPS_PROXY=
+export http_proxy=
+export HTTP_PROXY=
+export socks_proxy=
+export SOCKS_PROXY=
+export NO_PROXY=
+export no_proxy=
 echo '//Clear the proxy prefs
 user_pref("network.proxy.ftp", "");
 user_pref("network.proxy.ftp_port", 0);
@@ -51,53 +59,47 @@ user_pref("network.proxy.socks_port", 0);
 user_pref("network.proxy.ssl", "");
 user_pref("network.proxy.ssl_port", 0);
 user_pref("network.proxy.type", 5);' > /usr/local/etc/firefox/user.js
-rm -rf /etc/apt/apt.conf.d/proxy.conf
+sed -i "
+	s/http_proxy.*/http_proxy/g
+	s/https_proxy.*/https_proxy/g
+	s/no_proxy.*/no_proxy/g" ~/.w3m/config
 exit
 }
 
 set_any(){
-sed -i "6s/.*/\"EgressRegion\":\"\",/" /usr/local/sbin/psiphon/psiphon.config
+sed -i "s/EgressRegion.*/EgressRegion\":\"\",/" /usr/local/sbin/psiphon/psiphon.config
+}
 
+set_fr(){
+sed -i "s/EgressRegion.*/EgressRegion\":\"FR\",/" /usr/local/sbin/psiphon/psiphon.config
 }
 
 set_jp(){
-sed -i "6s/.*/\"EgressRegion\":\"JP\",/" /usr/local/sbin/psiphon/psiphon.config
+sed -i "s/EgressRegion.*/EgressRegion\":\"JP\",/" /usr/local/sbin/psiphon/psiphon.config
 }
 
 set_nl(){
-sed -i "6s/.*/\"EgressRegion\":\"NL\",/" /usr/local/sbin/psiphon/psiphon.config
+sed -i "s/EgressRegion.*/EgressRegion\":\"NL\",/" /usr/local/sbin/psiphon/psiphon.config
 }
 
 set_sg(){
-sed -i "6s/.*/\"EgressRegion\":\"SG\",/" /usr/local/sbin/psiphon/psiphon.config
+sed -i "s/EgressRegion.*/EgressRegion\":\"SG\",/" /usr/local/sbin/psiphon/psiphon.config
 }
 
 
-ans=$(zenity  --list  --title "PSIPHON CONTROLLER" --width=500 --height=245 \
+ans=$(zenity  --list  --title "PSIPHON CONTROLLER" --width=500 --height=300 \
 --text "Start Psiphon and configure the system proxy settings.
 Psiphon is connected if Tunnels {\"count\":1}.
 CTRL-C to exit Psiphon and clear the system proxy settings." \
 --radiolist  --column "Pick" --column "Action" \
 FALSE "Start Psiphon (best performing servers)." \
+FALSE "Start Psiphon (egress from France)." \
 FALSE "Start Psiphon (egress from Japan)." \
 FALSE "Start Psiphon (egress from the Netherlands)." \
 FALSE "Start Psiphon (egress from Singapore).");
 
-	if [  "$ans" = "Start Psiphon (best performing servers)." ]; then
-		set_any
-		psiphonstart
-
-	elif [  "$ans" = "Start Psiphon (egress from Japan)." ]; then
-		set_jp
-		psiphonstart
-
-	elif [  "$ans" = "Start Psiphon (egress from the Netherlands)." ]; then
-		set_nl
-		psiphonstart
-
-	elif [  "$ans" = "Start Psiphon (egress from Singapore)." ]; then
-		set_sg
-		psiphonstart
-
-	fi
-
+[[ "$ans" == "Start Psiphon (best performing servers)." ]] && set_any && psiphonstart;
+[[ "$ans" == "Start Psiphon (egress from France)." ]] && set_fr && psiphonstart;
+[[ "$ans" == "Start Psiphon (egress from Japan)." ]] && set_jp && psiphonstart;
+[[ "$ans" == "Start Psiphon (egress from the Netherlands)." ]] && set_nl && psiphonstart;
+[[ "$ans" == "Start Psiphon (egress from Singapore)." ]] && set_sg && psiphonstart;
