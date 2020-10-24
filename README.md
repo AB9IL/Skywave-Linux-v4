@@ -4,13 +4,13 @@ Scripts providing efficient, powerful, yet user friendly software defined radio 
 #### aeromodes.sh:
 Requires acarsdec and vdlm2dec.  Simultaneous and multichannel ACARS or VDL Mode 2 data capture.
 
-### ais-file-decoder:
+#### ais-file-decoder:
 Requires python3 with modules ais and json.  AIS file decoder converts logs of NMEA data to decoded json format.
 
-### ais-fileto-sqlite:
+#### ais-fileto-sqlite:
 Requires python3 and modules ais, sqlite3, and json. AIS file decoder converts logs of NMEA data to an sqlite database file.
 
-### ais-mapper:
+#### ais-mapper:
 Requires python3 and modules folium, pandas, and numpy. 
 
 #### ais_monitor.sh:
