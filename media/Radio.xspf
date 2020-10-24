@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<playlist xmlns="http://xspf.org/ns/0/" xmlns:vlc="http://www.videolan.org/vlc/playlist/ns/0/" version="1">
+	<title>Playlist</title>
+	<trackList>
+		<track>
+			<location>http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio4fm_mf_p</location>
+			<title>BBC Radio 4</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>0</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio5live_mf_p</location>
+			<title>BBC Radio 5</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>1</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://www.beatlesradio.com:8000/stream/1/</location>
+			<title>Beatles Radio</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>2</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://86.94.213.59:8000/</location>
+			<title>Beyond the Beat Generation</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>3</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://cbc_r1_hfx.akacast.akamaistream.net/7/981/451661/v1/rc.akacast.akamaistream.net/cbc_r1_hfx</location>
+			<title>CBC Radio 1 Halifax</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>4</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://cbc_r1_ykn.akacast.akamaistream.net/7/369/451661/v1/rc.akacast.akamaistream.net/cbc_r1_ykn</location>
+			<title>CBC Radio 1 Yellowknife</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>5</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://cbc_r2_vcr.akacast.akamaistream.net/7/773/451661/v1/rc.akacast.akamaistream.net/cbc_r2_vcr</location>
+			<title>CBC Radio 2 Vancouver</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>6</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://icecast2.rte.ie/radio1</location>
+			<title>RTE Radio 1 Dublin</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>7</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://live-radio01.mediahubaustralia.com/3LRW/mp3/</location>
+			<title>ABC Radio Melbourne</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>8</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://gcnlive.com/playlists/live/channel1.m3u</location>
+			<title>Genesis Communications Network 1</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>9</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://gcnlive.com/playlists/live/channel2.m3u</location>
+			<title>Genesis Communications Network 2</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>10</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://gcnlive.com/playlists/live/channel3.m3u</location>
+			<title>Genesis Communications Network 3</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>11</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://gcnlive.com/playlists/live/channel4.m3u</location>
+			<title>Genesis Communications Network 4</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>12</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://stream-mp3.infowars.com:80/</location>
+			<title>Infowars.com (Alex Jones)</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>13</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://66.180.232.7:1477/</location>
+			<title>Overcomer Ministry (Brother Stair)</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>14</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://149.56.155.73:8080/</location>
+			<title>Real Punk Radio</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>15</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://rustradio.org:9000/stream.ogg</location>
+			<title>Rust Radio (Live Neil Young)</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>16</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://eu1.radio.u-2.im:9998/</location>
+			<title>U2 Radio (Live U2)</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>17</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://stations.pacifica.org:8000/kpfa_64</location>
+			<title>KPFA Pacifica Radio Berkeley</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>18</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://www.splatterbox.us:7415/</location>
+			<title>WBCQ (The Planet: Free Speech Radio) 1</title>
+			<creator>WBCQ</creator>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>19</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://www.splatterbox.us:5110/</location>
+			<title>WBCQ (The Planet: Free Speech Radio) 2</title>
+			<creator>WBCQ</creator>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>20</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://wgltradio.ilstu.edu:8000/wgltblues.mp3</location>
+			<title>WGLT Blues Radio Chicago</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>21</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://icecast.will.illinois.edu:8000/WILL-mp3-48</location>
+			<title>WILL University of Illinois Champaign-Urbana</title>
+			<creator>WILL-AM</creator>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>22</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>https://wpr-ice.streamguys1.com/wpr-hd2-mp3-96.m3u</location>
+			<title>Wisconsin Public Radio (Classical Network)</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>23</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://wpr-ice.streamguys.net/wpr-ideas-mp3-64.m3u</location>
+			<title>Wisconsin Public Radio (Ideas Network)</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>24</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://am820.wnyc.org/wnycam</location>
+			<title>WNYC New York Public Radio</title>
+			<creator>WWNYC</creator>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>25</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://stream.wqxr.org/wqxr</location>
+			<title>WQXR New York Classical Radio</title>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>26</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://wwcr.gsradio.net:3763/</location>
+			<title>WWCR 1 Nashville</title>
+			<creator>WWCR</creator>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>27</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://wwcr.gsradio.net:3863/</location>
+			<title>WWCR 2 Nashville</title>
+			<creator>WWCR</creator>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>28</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://wwcr.gsradio.net:3963/</location>
+			<title>WWCR 3 Nashville</title>
+			<creator>WWCR</creator>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>29</vlc:id>
+			</extension>
+		</track>
+		<track>
+			<location>http://wwcr.gsradio.net:4063/</location>
+			<title>WWCR 4 Nashville</title>
+			<creator>WWCR</creator>
+			<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:id>30</vlc:id>
+			</extension>
+		</track>
+	</trackList>
+	<extension application="http://www.videolan.org/vlc/playlist/0">
+			<vlc:item tid="0"/>
+			<vlc:item tid="1"/>
+			<vlc:item tid="2"/>
+			<vlc:item tid="3"/>
+			<vlc:item tid="4"/>
+			<vlc:item tid="5"/>
+			<vlc:item tid="6"/>
+			<vlc:item tid="7"/>
+			<vlc:item tid="8"/>
+			<vlc:item tid="9"/>
+			<vlc:item tid="10"/>
+			<vlc:item tid="11"/>
+			<vlc:item tid="12"/>
+			<vlc:item tid="13"/>
+			<vlc:item tid="14"/>
+			<vlc:item tid="15"/>
+			<vlc:item tid="16"/>
+			<vlc:item tid="17"/>
+			<vlc:item tid="18"/>
+			<vlc:item tid="19"/>
+			<vlc:item tid="20"/>
+			<vlc:item tid="21"/>
+			<vlc:item tid="22"/>
+			<vlc:item tid="23"/>
+			<vlc:item tid="24"/>
+			<vlc:item tid="25"/>
+			<vlc:item tid="26"/>
+			<vlc:item tid="27"/>
+			<vlc:item tid="28"/>
+			<vlc:item tid="29"/>
+			<vlc:item tid="30"/>
+	</extension>
+</playlist>
