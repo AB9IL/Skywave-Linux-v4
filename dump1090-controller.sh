@@ -68,11 +68,11 @@ notifyerror(){
         WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="Dump1090 - Error." \
 		--text="Something went wrong!!!!!!");
-		stop
+		stop_dump
         exit
 }
 
-stop(){
+stop_dump(){
 killall -9 dump1090 rx_sdr rtl_sdr rtl_tcp $(lsof -t -i:30003) sqlitebrowser
 pkill -f /usr/local/bin/dump1090-stream-parser
 rm -f $fifo
@@ -90,17 +90,7 @@ FALSE "Start Dump1090 and write decoded data to a database." \
 FALSE "Start Dump1090 and plot aircraft positions." \
 TRUE "Stop Dump1090");
 
-	if [  "$ans" = "Start Dump1090 and write raw data to a logfile." ]; then
-		startlog
-
-	elif [  "$ans" =  "Start Dump1090 and write decoded data to a database." ]; then
-		start_decoded_log
-
-	elif [  "$ans" = "Start Dump1090 and plot aircraft positions." ]; then
-		startplot
-
-	elif [  "$ans" = "Stop Dump1090" ]; then
-		stop
-
-	fi
-
+[[ "$ans" == "Start Dump1090 and write raw data to a logfile." ]] && startlog
+[[ "$ans" == "Start Dump1090 and write decoded data to a database." ]] && start_decoded_log
+[[ "$ans" == "Start Dump1090 and plot aircraft positions." ]] && startplot
+[[ "$ans" == "Stop Dump1090" ]] && stop_dump
