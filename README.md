@@ -57,3 +57,9 @@ Requires RTLSDR-Airband.  Simultaneous multichannel am or nbfm voice reception.
 
 #### sshuttle-controller.sh:
 Requires sshuttle.  SSH tunneling application for anti-censorship when VPNs are being blocked.
+
+#### vimwiki:
+Requires Neovim with Vimwiki plugin.  Take notes in markdown format, fully linkable and searchable.
+
+#### vlc-playlist:
+Requires VLC Media Player.  Ncurses player runs in the terminal.  Reads playlist of streaming audio broadcasters.
