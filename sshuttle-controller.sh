@@ -44,7 +44,7 @@ export user
 export port
 
 sudo iptables-save > /tmp/iptables.backup
-mate-terminal -e  'sh -c "sshuttle -r $user@$server:$port 0.0.0.0/0 -v --dns --pidfile=/tmp/sshuttle.pid; read line"' &
+x-terminal-emulator -e  sh -c "sshuttle -r $user@$server:$port 0.0.0.0/0 -v --dns --pidfile=/tmp/sshuttle.pid; read line" &
 stop_sshuttle
 }
 
@@ -53,18 +53,12 @@ kill $(cat /tmp/sshuttle.pid)
 sudo iptables-restore < /tmp/iptables.backup
 }
 
-ans=$(zenity  --list  --title "Sshuttle SSH Tunneling Application" --width=300 --height=180 \
+ans=$(zenity  --list  --title "Sshuttle SSH Tunneling Application" --width=300 --height=200 \
 --text "Save server data or start ssh tunneling.
 ** You must set up your own password or key based server logins. **" \
 --radiolist  --column "Pick" --column "Action" \
 TRUE "Start ssh tunneling." \
 FALSE "Enter your server data.");
 
-	if [  "$ans" = "Start ssh tunneling." ]; then
-		start_sshuttle
-
-	elif [  "$ans" = "Enter your server data." ]; then
-		save_data
-
-	fi
-
+[[ "$ans" == "Start ssh tunneling." ]] && start_sshuttle
+[[ "$ans" == "Enter your server data." ]] && save_data
