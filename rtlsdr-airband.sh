@@ -300,29 +300,11 @@ FALSE "Edit the frequency list" \
 TRUE "Stop Multichannel Voice" \
 );
 
-	if [  "$ans" = "Start Multichannel Voice (PulseAudio)" ]; then
-		start0
-
-#	elif [  "$ans" = "Start Multichannel Voice (Icecast)" ]; then
-#		start1
-
-	elif [  "$ans" = "Set channels and start Multichannel Voice (PulseAudio)" ]; then
-		start2
-
-#	elif [  "$ans" = "Set channels and start Multichannel Voice (Icecast)" ]; then
-#		start3
-
-	elif [  "$ans" = "Backup the current config file" ]; then
-		backupconf
-
-	elif [  "$ans" = "Restore the config file from a backup" ]; then
-		restoreconf
-
-	elif [  "$ans" = "Edit the frequency list" ]; then
-		mate-terminal -e "nano /usr/local/etc/VOICE_FREQS"
-
-	elif [  "$ans" = "Stop Multichannel Voice" ]; then
-		stop
-
-	fi
-
+[[ "$ans" == "Start Multichannel Voice (PulseAudio)" ]] && start0
+# [[ "$ans" == "Start Multichannel Voice (Icecast)" ]] && start1
+[[ "$ans" == "Set channels and start Multichannel Voice (PulseAudio)" ]] && start2
+# [[ "$ans" == "Set channels and start Multichannel Voice (Icecast)" ]] && start3
+[[ "$ans" == "Backup the current config file" ]] && backupconf
+[[ "$ans" == "Restore the config file from a backup" ]] && restoreconf
+[[ "$ans" == "Edit the frequency list" ]] && x-terminal-emulator -e "nano /usr/local/etc/VOICE_FREQS"
+[[ "$ans" == "Stop Multichannel Voice" ]] && stop
