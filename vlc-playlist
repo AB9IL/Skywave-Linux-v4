@@ -1,4 +1,58 @@
 #!/bin/bash
 
-# Open VLC command line interface and run the playlist
-nvlc --no-color --loop --repeat --playlist-autostart $HOME/Music/Radio.xspf
+# Copyright (c) 2021 by Philip Collier, radio AB9IL.
+# This script is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version. There is NO warranty; not even for
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+OPTION1="Start Internet Radio"
+OPTION2="Stop Streaming"
+OPTIONS="$OPTION1\n$OPTION2"
+FZF_COMMAND1='fzf --layout=reverse --header=Select:'
+FZF_COMMAND2='fzf --layout=reverse --header=Select:'
+ROFI_COMMAND1='rofi -lines 2 -dmenu -p Select'
+ROFI_COMMAND2='rofi -dmenu -p Select'
+
+# interface based on commandline arguments
+case "$1" in
+    gui)
+        COMMAND1=$ROFI_COMMAND1
+        COMMAND2=$ROFI_COMMAND2
+    ;;
+    *)
+        COMMAND1=$FZF_COMMAND1
+        COMMAND2=$FZF_COMMAND2
+    ;;
+esac
+
+# select option to stop or open a stream
+SELECTED="$(echo -e "$OPTIONS" | $COMMAND1 )"
+
+case $SELECTED in
+  $OPTION1)
+    readarray STREAMS < ~/Music/radiostreams
+    CHOICE="$(echo "${STREAMS[@]}" | awk -F \" '{print $2}' | $COMMAND2 )"
+
+    # find the correct stream url
+    i=0
+    while [ $i -le ${#STREAMS[@]} ]; do
+        ITEM="$(echo "${STREAMS[i]}" | awk -F \" '{print $2}')"
+        [[ "$ITEM" == "$CHOICE" ]] && URL="$(echo "${STREAMS[i]}" | awk -F \" '{print $1}')" \
+        && cvlc $URL --audio-filter compressor \
+        --compressor-attack 1.5 \
+        --compressor-release 300 \
+        --compressor-threshold -26 \
+        --compressor-ratio 10 \
+        --compressor-knee 2 \
+        --compressor-makeup-gain 12 \
+        >/dev/null 2>&1 &
+        ((i++))
+    done
+    ;;
+  $OPTION2)
+      # cleanly stop the player
+      killall -9 vlc
+    ;;
+esac
