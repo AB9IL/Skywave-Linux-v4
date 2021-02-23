@@ -62,4 +62,4 @@ Requires sshuttle.  SSH tunneling application for anti-censorship when VPNs are 
 Requires Neovim with Vimwiki plugin.  Take notes in markdown format, fully linkable and searchable.
 
 #### vlc-playlist:
-Requires VLC Media Player.  Ncurses player runs in the terminal.  Reads playlist of streaming audio broadcasters.
+Rewritten for 2021! Requires VLC and Rofi or fzf.  Reads playlist of streaming audio broadcasters and presents a "fuzzy finder" style menu.  When a sation is selected, the application drops into the backgound to provide audio.  Bring up the menu again to select another station or stop streaming.  Amplitude compression is enabled by default to to make loudness more consistent across the various streams.
