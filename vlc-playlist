@@ -7,52 +7,73 @@
 # (at your option) any later version. There is NO warranty; not even for
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
+STREAMS_FILE=~/Music/radiostreams
 OPTION1="Start Internet Radio"
 OPTION2="Stop Streaming"
-OPTIONS="$OPTION1\n$OPTION2"
+OPTION3="Edit Station List"
+OPTIONS="$OPTION1\n$OPTION2\n$OPTION3"
 FZF_COMMAND1='fzf --layout=reverse --header=Select:'
+ROFI_COMMAND1='rofi -lines 3 -dmenu -p Select'
 FZF_COMMAND2='fzf --layout=reverse --header=Select:'
-ROFI_COMMAND1='rofi -lines 2 -dmenu -p Select'
 ROFI_COMMAND2='rofi -dmenu -p Select'
+FZF_COMMAND3="vim $STREAMS_FILE"
+ROFI_COMMAND3="x-terminal-emulator -e vim $STREAMS_FILE"
 
 # interface based on commandline arguments
 case "$1" in
     gui)
         COMMAND1=$ROFI_COMMAND1
         COMMAND2=$ROFI_COMMAND2
+        COMMAND3=$ROFI_COMMAND3
     ;;
     *)
         COMMAND1=$FZF_COMMAND1
         COMMAND2=$FZF_COMMAND2
+        COMMAND3=$FZF_COMMAND3
     ;;
 esac
 
-# select option to stop or open a stream
+start_player(){
+stop_player
+sleep 1
+cvlc $URL --audio-filter compressor \
+    --compressor-attack 1.5 \
+    --compressor-release 300 \
+    --compressor-threshold -26 \
+    --compressor-ratio 10 \
+    --compressor-knee 2 \
+    --compressor-makeup-gain 12 \
+    >/dev/null 2>&1 &
+exit 0
+}
+
+stop_player(){
+killall -9 vlc
+}
+
+# select option from second menu instance
 SELECTED="$(echo -e "$OPTIONS" | $COMMAND1 )"
 
 case $SELECTED in
   $OPTION1)
-    readarray STREAMS < ~/Music/radiostreams
+    readarray STREAMS < $STREAMS_FILE
     CHOICE="$(echo "${STREAMS[@]}" | awk -F \" '{print $2}' | $COMMAND2 )"
 
     # find the correct stream url
     i=0
     while [ $i -le ${#STREAMS[@]} ]; do
         ITEM="$(echo "${STREAMS[i]}" | awk -F \" '{print $2}')"
-        [[ "$ITEM" == "$CHOICE" ]] && URL="$(echo "${STREAMS[i]}" | awk -F \" '{print $1}')" \
-        && cvlc $URL --audio-filter compressor \
-        --compressor-attack 1.5 \
-        --compressor-release 300 \
-        --compressor-threshold -26 \
-        --compressor-ratio 10 \
-        --compressor-knee 2 \
-        --compressor-makeup-gain 12 \
-        >/dev/null 2>&1 &
+        [[ "$ITEM" == "$CHOICE" ]] && URL="$(echo "${STREAMS[i]}" | \
+            awk -F \" '{print $1}')" && start_player
         ((i++))
     done
     ;;
   $OPTION2)
       # cleanly stop the player
-      killall -9 vlc
+      stop_player
+    ;;
+  $OPTION3)
+      # edit the list of streaming stations 
+      $COMMAND3
     ;;
 esac
