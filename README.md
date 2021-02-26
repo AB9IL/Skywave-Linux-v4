@@ -55,6 +55,9 @@ Requires psiphon-tunnel-core.  Tunneling application for using Psiphon anti-cens
 #### rtlsdr-airband.sh:
 Requires RTLSDR-Airband.  Simultaneous multichannel am or nbfm voice reception.
 
+### sdr-boomarks:
+Requires Rofi and / or fzf.  Reads a list of radio bookmarks (frequency, mode, description) and presents a "fuzzy finder" style menu.  When a frequency is selected, rtl_fm tunes to it and drops into the background to provide audio.  Bring up the menu again to select another frequency or stop reception.  The radio bookmarks are stored in the file "sdrbookmarks" located in the ~/Music directory.  Entries are one per line, formatted in order of "frequency mode description" with the description in quotes.  There is a menu option for editing the list.
+
 #### sshuttle-controller.sh:
 Requires sshuttle.  SSH tunneling application for anti-censorship when VPNs are being blocked.
 
@@ -62,4 +65,4 @@ Requires sshuttle.  SSH tunneling application for anti-censorship when VPNs are 
 Requires Neovim with Vimwiki plugin.  Take notes in markdown format, fully linkable and searchable.
 
 #### vlc-playlist:
-Rewritten for 2021! Requires VLC and Rofi or fzf.  Reads playlist of streaming audio broadcasters and presents a "fuzzy finder" style menu.  When a sation is selected, the application drops into the backgound to provide audio.  Bring up the menu again to select another station or stop streaming.  Amplitude compression is enabled by default to to make loudness more consistent across the various streams.  The playlist is contained in the file "radiostreams" and it is normally kept in the ~/Music directory.  Entries are one line per stream; url and quoted name of the station.
+Rewritten for 2021! Requires VLC and Rofi or fzf.  Reads playlist of streaming audio broadcasters and presents a "fuzzy finder" style menu.  When a sation is selected, the application drops into the backgound to provide audio.  Bring up the menu again to select another station or stop streaming.  Amplitude compression is enabled by default to to make loudness more consistent across the various streams.  The playlist is contained in the file "radiostreams" and it is normally kept in the ~/Music directory.  Entries are one line per stream; url and quoted name of the station, and there is an option in the menu for editing the list.
