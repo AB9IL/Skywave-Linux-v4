@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# Copyright (c) 2021 by Philip Collier, radio AB9IL <webmaster@ab9il.net>
+# This script is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version. There is NO warranty; not even for
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+BOOKMARKS_FILE=~/Music/sdrbookmarks
+UNIT="M" # Tume units. M for megahertz, k for kilohertz, empty for hertz
+SAMP=""
+OPTION1="Tune SDR Bookmarks"
+OPTION2="Stop SDR Bookmarks"
+OPTION3="Reset the USB Device"
+OPTION4="Edit Bookmarks"
+OPTIONS="$OPTION1\n$OPTION2\n$OPTION3\n$OPTION4"
+FZF_COMMAND1='fzf --layout=reverse --header=Select:'
+ROFI_COMMAND1='rofi -lines 4 -dmenu -p Select'
+FZF_COMMAND2='fzf --layout=reverse --header=Select:'
+ROFI_COMMAND2='rofi -dmenu -p Select'
+FZF_COMMAND3='usbreset-helper'
+ROFI_COMMAND3='x-terminal-emulator -e usbreset-helper'
+FZF_COMMAND4="vim $BOOKMARKS_FILE"
+ROFI_COMMAND4="x-terminal-emulator -e vim $BOOKMARKS_FILE"
+
+#Get the SDR frequency offset (ppm)
+corr=$(cat /usr/local/etc/sdr_offset)
+#Get the SDR gain (gain)
+gain=$(cat /usr/local/etc/sdr_gain)
+
+start_sdr(){
+stop_sdr
+sleep 0.5
+TARGET="$(echo "${STREAMS[i]}" | awk '{print $1}')" && MODE="$(echo "${STREAMS[i]}" | awk '{print $2}')"
+[[  "$MODE" == "fm" ]] && SAMP="s 15k -l 270"
+[[  "$MODE" == "am" ]] && SAMP="s 15k -l 270"
+[[ "$ITEM" == "$CHOICE" ]] && rtl_fm -M $MODE -f $TARGET$UNIT -p $corr $SAMP -g $gain | \
+    play -r 32k -t raw -e s -b 16 -c1 -V1 - &
+exit 0
+}
+
+stop_sdr(){
+killall -9 rtl_fm
+}
+
+# interface based on commandline arguments
+case "$1" in
+    gui)
+        COMMAND1=$ROFI_COMMAND1
+        COMMAND2=$ROFI_COMMAND2
+        COMMAND3=$ROFI_COMMAND3
+        COMMAND4=$ROFI_COMMAND4
+    ;;
+    *)
+        COMMAND1=$FZF_COMMAND1
+        COMMAND2=$FZF_COMMAND2
+        COMMAND3=$FZF_COMMAND3
+        COMMAND4=$FZF_COMMAND4
+    ;;
+esac
+
+# select option from second menu instance
+SELECTED="$(echo -e "$OPTIONS" | $COMMAND1 )"
+
+case $SELECTED in
+  $OPTION1)
+    readarray STREAMS < $BOOKMARKS_FILE
+    CHOICE="$(echo "${STREAMS[@]}" | awk -F \" '{print $2}' | $COMMAND2 )"
+
+    # find the correct SDR stream
+    i=0
+    while [ $i -le ${#STREAMS[@]} ]; do
+        ITEM="$(echo "${STREAMS[i]}" | awk -F \" '{print $2}')"
+        [[ "$ITEM" == "$CHOICE" ]] && start_sdr
+    ((i++))
+    done
+    ;;
+  $OPTION2)
+      # cleanly stop the player
+      stop_sdr
+    ;;
+  $OPTION3)
+      # reset a USB Device
+      $COMMAND3
+    ;;
+  $OPTION4)
+      # edit the bookmarks
+      $COMMAND4
+    ;;
+esac
