@@ -19,8 +19,8 @@ Requires rtl-ais.  Simultaneous dual channel ais maritime data capture.  The ais
 #### dump1090.sh:
 Requires dump1090 and dump1090-stream-parser.  Capture, parse, and save aeronautical ADS-B data.
 
-#### kal.sh:
-Requires kalibrate-rtl.  Uses the GSM mobile phone network to measure rtl-sdr frequency offsets.
+#### sdr-params.sh:
+Requires kalibrate-rtl.  Store SDR parameters for use by other applications and also measure rtl-sdr frequency offsets (the error in ppm).  Manually enter the soapysdr device string and index.  This script makes it convenient for dump1090, rtl_fm, or other to read what you want to use for gain or have for a ppm offset.  You must put code to fetch the data into those other scripts.
 
 #### lantern-controller.sh:
 Requires Lantern.  Configures Firefox networking settings and starts / stops Lantern such that it runs on specific ports and is terminated cleanly.
