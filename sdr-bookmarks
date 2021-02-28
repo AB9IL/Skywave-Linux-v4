@@ -8,8 +8,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 BOOKMARKS_FILE=~/Music/sdrbookmarks
-UNIT="M" # Tume units. M for megahertz, k for kilohertz, empty for hertz
-SAMP=""
+UNIT="e6" # Freq units. e6 for MHz, empty for Hz
+AM_SAMP="16000" # am sampling rate
+FM_SAMP="16000" # fm sampling rate
+SQUELCH="170" # squelch level
+#------------------------------------------------------------------------------
+#-----EDIT BELOW ONLY IF NECESSARY---WATCH FOR DRAGONS-------------------------
+#------------------------------------------------------------------------------
 OPTION1="Tune SDR Bookmarks"
 OPTION2="Stop SDR Bookmarks"
 OPTION3="Reset the USB Device"
@@ -25,20 +30,10 @@ FZF_COMMAND4="vim $BOOKMARKS_FILE"
 ROFI_COMMAND4="x-terminal-emulator -e vim $BOOKMARKS_FILE"
 
 #Get the SDR frequency offset (ppm)
-corr=$(cat /usr/local/etc/sdr_offset)
+CORR=$(cat /usr/local/etc/sdr_offset)
 #Get the SDR gain (gain)
-gain=$(cat /usr/local/etc/sdr_gain)
+GAIN=$(cat /usr/local/etc/sdr_gain)
 
-start_sdr(){
-stop_sdr
-sleep 0.5
-TARGET="$(echo "${STREAMS[i]}" | awk '{print $1}')" && MODE="$(echo "${STREAMS[i]}" | awk '{print $2}')"
-[[  "$MODE" == "fm" ]] && SAMP="s 15k -l 270"
-[[  "$MODE" == "am" ]] && SAMP="s 15k -l 270"
-[[ "$ITEM" == "$CHOICE" ]] && rtl_fm -M $MODE -f $TARGET$UNIT -p $corr $SAMP -g $gain | \
-    play -r 32k -t raw -e s -b 16 -c1 -V1 - &
-exit 0
-}
 
 stop_sdr(){
 killall -9 rtl_fm
@@ -60,21 +55,25 @@ case "$1" in
     ;;
 esac
 
-# select option from second menu instance
+# select option from first menu instance
 SELECTED="$(echo -e "$OPTIONS" | $COMMAND1 )"
 
 case $SELECTED in
   $OPTION1)
     readarray STREAMS < $BOOKMARKS_FILE
-    CHOICE="$(echo "${STREAMS[@]}" | awk -F \" '{print $2}' | $COMMAND2 )"
-
-    # find the correct SDR stream
-    i=0
-    while [ $i -le ${#STREAMS[@]} ]; do
-        ITEM="$(echo "${STREAMS[i]}" | awk -F \" '{print $2}')"
-        [[ "$ITEM" == "$CHOICE" ]] && start_sdr
-    ((i++))
-    done
+    CHOICE="$(echo "${STREAMS[@]}" | awk -F \" '{print $1, $2}' | sed 's/^ //g' | $COMMAND2 )"
+    # start the SDR stream
+    stop_sdr
+    sleep 0.5
+    SAMP=""
+    SQ=""
+    RATE=48000
+    FREQ="$(echo "$CHOICE" | awk '{print $1}')"
+    MODE="$(echo "$CHOICE" | awk '{print $2}')"
+    [[  "$MODE" == "fm" ]] && SAMP="-s $FM_SAMP" && RATE=$FM_SAMP && SQ="-l $SQUELCH"
+    [[  "$MODE" == "am" ]] && SAMP="-s $AM_SAMP" && RATE=$AM_SAMP && SQ="-l $SQUELCH"
+    rtl_fm -M $MODE -f $FREQ$UNIT -p $CORR $SAMP -g $GAIN $SQ -r $RATE | \
+        aplay -r $RATE -t raw -c 1 -f S16_LE 2>&1 &
     ;;
   $OPTION2)
       # cleanly stop the player
