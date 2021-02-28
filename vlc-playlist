@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2021 by Philip Collier, radio AB9IL.
+# Copyright (c) 2021 by Philip Collier, radio AB9IL <webmaster@ab9il.net>
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -35,7 +35,8 @@ esac
 
 start_player(){
 stop_player
-sleep 1
+sleep 0.5
+echo "Connecting..."
 cvlc $URL --audio-filter compressor \
     --compressor-attack 1.5 \
     --compressor-release 300 \
@@ -48,6 +49,7 @@ exit 0
 }
 
 stop_player(){
+echo -e "Killing any existing vlc instances..."
 killall -9 vlc
 }
 
@@ -58,13 +60,13 @@ case $SELECTED in
   $OPTION1)
     readarray STREAMS < $STREAMS_FILE
     CHOICE="$(echo "${STREAMS[@]}" | awk -F \" '{print $2}' | $COMMAND2 )"
-
+    [[ -z "$CHOICE" ]] && echo "No selection..." && exit 1
     # find the correct stream url
     i=0
-    while [ $i -le ${#STREAMS[@]} ]; do
+    while [ $i -lt ${#STREAMS[@]} ]; do
         ITEM="$(echo "${STREAMS[i]}" | awk -F \" '{print $2}')"
         [[ "$ITEM" == "$CHOICE" ]] && URL="$(echo "${STREAMS[i]}" | \
-            awk -F \" '{print $1}')" && start_player
+            awk -F \" '{print $1}'| sed 's/^ //g')" && start_player
         ((i++))
     done
     ;;
