@@ -59,7 +59,7 @@ Requires RTLSDR-Airband.  Simultaneous multichannel am or nbfm voice reception.
 Requires Rofi and / or fzf.  Reads a list of radio bookmarks (frequency, mode, description) and presents a "fuzzy finder" style menu.  When a frequency is selected, rtl_fm tunes to it and drops into the background to provide audio.  Bring up the menu again to select another frequency or stop reception.  The radio bookmarks are stored in the file "sdrbookmarks" located in the ~/Music directory.  Entries are one per line, formatted in order of "frequency mode description" with the description in quotes.  There is a menu option for editing the list.
 
 #### sshuttle-controller.sh:
-Requires sshuttle and Rofi.  SSH tunneling application for anti-censorship when VPNs are being blocked.  It now presents a menu from which the user selects from multiple servers (or different accounts on one server).  The server list is written to ~/.config/sshuttle/sshuttle.conf.  Each line should contain three space separated fields: <ip address> <username> <port>.
+Requires sshuttle and Rofi.  SSH tunneling application for anti-censorship when VPNs are being blocked.  It now presents a menu from which the user selects from multiple servers (or different accounts on one server).  The server list is written to ~/.config/sshuttle/sshuttle.conf.  Each line should contain three space separated fields: ip-address username port.
 
 #### vimwiki:
 Requires Neovim with Vimwiki plugin.  Take notes in markdown format, fully linkable and searchable.
