@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2019 by Philip Collier, radio AB9IL <webmaster@ab9il.net>
+# Copyright (c) 2021 by Philip Collier, github.com/AB9IL
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -8,57 +8,58 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 Encoding=UTF-8
-configfile=$HOME/.config/sshuttle/sshuttle.conf
-port='22'
+# config file format: one line per user account on the server
+# each line contains: ip username port
+# separate fields with a space
+CONFIGFILE=$HOME/.config/sshuttle/sshuttle.conf
 
-save_data(){
-OUTPUT=$(zenity --forms --title="Sshuttle SSH Tunneling Application" \
---text="Enter the remote server information.
-Stand by to enter the server password after contact is made.
-CTRL-C to exit the tunnel and restore network settings." \
---separator="," \
---add-entry="Remote server address" \
---add-entry="Remote server username" \
---add-entry="SSH port (default = 22)");
-
-if [[ "$?" -ne "0" || -z "$?" ]]; then
-    exit
-fi
-
-server=$(awk -F, '{print $1}' <<<$OUTPUT)
-user=$(awk -F, '{print $2}' <<<$OUTPUT)
-port=$(awk -F, '{print $3}' <<<$OUTPUT)
-
-echo "server=$server
-user=$user
-port=$port" > $configfile
+edit_data(){
+    vim $CONFIGFILE
 }
 
 
 start_sshuttle(){
-# get the server address, username, and ssh port
-. $configfile
-
-export server
-export user
-export port
-
-sudo iptables-save > /tmp/iptables.backup
-x-terminal-emulator -e  sh -c "sshuttle -r $user@$server:$port 0.0.0.0/0 -v --dns --pidfile=/tmp/sshuttle.pid; read line" &
-stop_sshuttle
+    readarray SERVERS < $CONFIGFILE
+    CHOICE="$(echo "${SERVERS[@]}" | awk '{print $1, $2}' | rofi -dmenu -p Select )"
+    [[ -z "$CHOICE" ]] && echo "No selection..." && exit 1
+    # go back and find the correct entry; read the data and connect
+    i=0
+    while [ $i -lt ${#SERVERS[@]} ]; do
+        # remove newlines and whitespace before looking for a match
+        CHOICE="$(echo $CHOICE | tr -d ' ')"
+        ITEM="$(echo "${SERVERS[i]}" | awk '{print $1, $2}' | tr -d \\n | tr -d ' ')"
+        # set variables if there is a match
+        if [ "$ITEM" == "$CHOICE" ]; then
+                export SSHUTTLE_IP="$(echo "${SERVERS[i]}" | awk '{print $1}')"
+                export SSHUTTLE_USER="$(echo "${SERVERS[i]}" | awk '{print $2}')"
+                export SSHUTTLE_PORT="$(echo "${SERVERS[i]}" | awk '{print $3}')"
+                sudo iptables-save > /tmp/iptables.backup; \
+                x-terminal-emulator -e  sh -c "sshuttle -r $SSHUTTLE_USER@$SSHUTTLE_IP:$SSHUTTLE_PORT 0.0.0.0/0 \
+                    --ssh-cmd 'ssh -o ServerAliveInterval=60' -v --dns \
+                    -v --dns --pidfile=/tmp/sshuttle.pid; read line" &
+                stop_sshuttle
+                break
+        fi
+    ((i++))
+    done
 }
 
 stop_sshuttle(){
 kill $(cat /tmp/sshuttle.pid)
 sudo iptables-restore < /tmp/iptables.backup
+exit 0
 }
 
-ans=$(zenity  --list  --title "Sshuttle SSH Tunneling Application" --width=300 --height=200 \
---text "Save server data or start ssh tunneling.
-** You must set up your own password or key based server logins. **" \
---radiolist  --column "Pick" --column "Action" \
-TRUE "Start ssh tunneling." \
-FALSE "Enter your server data.");
+OPTIONS="Start SSH tunneling
+Edit your server data
+Stop SSH tunneling"
 
-[[ "$ans" == "Start ssh tunneling." ]] && start_sshuttle
-[[ "$ans" == "Enter your server data." ]] && save_data
+# Take the choice; exit if no answer matches options.
+REPLY="$(echo -e "$OPTIONS" | rofi \
+    -dmenu -p "Sshuttle - Select Action" \
+    -lines 3 \
+    -mesg "You MUST set up key based server logins.")"
+
+[[  "$REPLY" == "Start SSH tunneling" ]] && start_sshuttle
+[[  "$REPLY" == "Edit your server data" ]] && edit_data
+[[  "$REPLY" == "Stop SSH tunneling" ]] && stop_sshuttle
