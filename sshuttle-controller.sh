@@ -49,8 +49,9 @@ start_sshuttle(){
                 export SSHUTTLE_PORT="$(echo "${SERVERS[i]}" | awk '{print $3}')"
                 sudo iptables-save > /tmp/iptables.backup; \
                 x-terminal-emulator -e  sh -c "sshuttle -r $SSHUTTLE_USER@$SSHUTTLE_IP:$SSHUTTLE_PORT 0.0.0.0/0 \
-                    --ssh-cmd 'ssh -o ServerAliveInterval=60' -v --dns \
-                    -v --dns --pidfile=/tmp/sshuttle.pid; read line" &
+                    --ssh-cmd 'ssh -o ServerAliveInterval=60' \
+                    --dns \
+                    --pidfile=/tmp/sshuttle.pid; read line" &
                 break
         fi
     ((i++))
