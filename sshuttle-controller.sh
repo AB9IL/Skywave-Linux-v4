@@ -51,7 +51,9 @@ start_sshuttle(){
                 x-terminal-emulator -e  sh -c "sshuttle -r $SSHUTTLE_USER@$SSHUTTLE_IP:$SSHUTTLE_PORT 0.0.0.0/0 \
                     --ssh-cmd 'ssh -o ServerAliveInterval=60' \
                     --dns \
-                    --pidfile=/tmp/sshuttle.pid; read line" &
+                    --pidfile=/tmp/sshuttle.pid; \
+                    read line; kill $(cat /tmp/sshuttle.pid); \
+                    sudo iptables-restore < /tmp/iptables.backup " &
                 break
         fi
     ((i++))
