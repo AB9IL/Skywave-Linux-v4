@@ -34,7 +34,7 @@ Requires FFMPEG.  Trims and processes video for easier screencast creation.
 #### nanoer.sh:
 Requires nano.  Force nano to run in a specific terminal emulator, set up command arguments.
 
-#### netkiwi
+#### netkiwi:
 Requires fzf and / or Rofi.  Provide easy and rapid acces to favorite stations on favorite KiwiSDR servers.  Supports simultaneous "multi site" monitoring.
 
 #### nvimmer.sh:
