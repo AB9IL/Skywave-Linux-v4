@@ -37,7 +37,7 @@ case "$1" in
 			exit
 	;;
 	*)
-		echo "usage: make-screencast < --record | --trim > < videofile > < start time hh:mm:ss > < end time hh:mm:ss >"
+		echo "usage: make-screencast < --record | --trim > < videofile > < start time hh:mm:ss > < duration hh:mm:ss >"
 		echo "The script will record or trim the video, saving it as an mp4 file."
 		echo "Trim only the original, not trimmed output, otherwise loss of quality will result!"
 		exit
