@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Copyright (c) 2021 by Philip Collier, radio AB9IL
+# This script is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version. There is NO warranty; not even for
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+# Automatically load KiwiSDR sites in a web browser to monitor something.
+#
+# NOTES:
+#  0) Channels are contained in a separate bookmarks file you should edit.
+#     Set up one channel per line in the format: "description" "server"
+#  1) A channel is focused on one subject of interest.
+#  2) A channel can contain one frequency from one server.
+#     A channel can also contain two servers, each tuned
+#     to the same or different frequencies.
+#  3) Enter the servers as a list of strings separated by
+#      a single space, formatted as:  "url frequency mode type"
+#  4) Server urls contain the domain, subdomain (if used),
+#     the port number, and trailing slash "/" (always used)
+#  5) Frequencies are in kHz; decimals are optional.
+#  6) Use lower case letters for the mode: "cw", "lsb", "am"
+#  7) The preferred AM mode is synchronous AM; any mode
+#     set to "am" will be automatically switched to "sam"
+#  8) CW mode will default to "usb" with an 800 Hz offset
+#     and a bandpass of 600 to 1000 Hz.
+#  9) Extended Single Sideband is set for an 8000 Hz banpass.
+#     It should be designated as "lsbw" or "usbw".
+# 10) DRM is available and is set for a 10 kHz bandpass
+# 11) Server types are "kiwi" for KiwiSDR or "web" for WebSDR
+#
+# Examples ("description" "server" "server" ):
+# "Atlantic Routes" "http://raleigh.twrmon.net:8073/ 6577.00 usb kiwi""http://bottlebranch.proxy.kiwisdr.com:8073/ 6577.00 usb kiwi"
+# "BBC Radio 4 Longwave(WebSDR)" "http://websdr.ewi.utwente.nl:8901/ 198.00 am web"
+#
+# Specify the web browser command
+# browser='vivaldi --new-window'
+browser='firefox --new-window'
+
+# specify the bookmarks file
+BOOKMARKS_FILE="$HOME/Music/sdr-stream-bookmarks"
+
+###############################################################################
+# CAUTION: DRAGONS LIVE BELOW THIS LINE
+###############################################################################
+start_radio(){
+for target in field; do
+    # extract url fragments from target
+    url=$(echo $field | awk '{printf $1}')
+    freq=$(echo $field | awk '{printf $2}')
+    mode=$(echo $field | awk '{printf $3}')
+    server_type=$(echo $field | awk '{printf $4}')
+done
+
+# make mode lower case; set bandpass and zoom
+mode="${mode,,}"
+[[  "$mode" == "am" ]] && [[ "$server_type" == "kiwi" ]] && \
+    mode="sam" && bandpass="-4000,4000" && zoom="z10"
+[[  "$mode" == "sam" ]] && [[ "$server_type" == "web" ]] && \
+    mode="am"  # envelope detector because not enough WebSDRs have sync option
+[[  "$mode" == "cw" ]] && mode="usb" && bandpass="600,1000" && \
+    freq=$(echo "$freq - 0.8" | bc) && zoom="z13"
+[[  "$mode" == "drm" ]] && bandpass="-5000,5000" && zoom="z10"
+[[  "$mode" == "lsb" ]] && bandpass="-3500,-100" && zoom="z13"
+[[  "$mode" == "lsbw" ]] && bandpass="-8000,-10" && zoom="z10" && mode="lsb"
+[[  "$mode" == "usb" ]] && bandpass="100,3500" && zoom="z13"
+[[  "$mode" == "usbw" ]] && bandpass="10,8000" && zoom="z10" && mode="usb"
+
+# open the browser and connect to the SDR server
+[[ "$server_type" == "kiwi" ]] && ${browser} ${url}"?f="${freq}"/"${bandpass}${mode}${zoom} &
+[[ "$server_type" == "web" ]] && ${browser} ${url}"?tune="${freq}${mode} &
+exit 0
+}
+
+# read the bookmarks
+readarray CHANNELS < $BOOKMARKS_FILE
+
+# open a menu
+[[ "$1" == "gui" ]] && COMMAND="rofi -dmenu -p Select"
+[[ "$1" == "gui" ]] || COMMAND="fzf --layout=reverse --header=Select:"
+
+# Select the desired channel
+CHOICE=$(echo "${CHANNELS[@]}" | sed '/^$/d' | awk -F\" '{printf $2"\n"}' | $COMMAND )
+
+[[ -z "$CHOICE" ]] && echo "No selection made, exiting..." && exit 0
+
+# Get site urls, freq, and mode for the selected channel
+CHECK=$(echo "${CHANNELS[@]}" | grep "$CHOICE")
+
+field=$(echo $CHECK | awk -F\" '{printf $4"\n"}')
+[[ -z "$field"  ]] || start_radio
+
+field=$(echo $CHECK | awk -F\" '{printf $6"\n"}')
+[[ -z "$field"  ]] || start_radio
