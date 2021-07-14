@@ -48,10 +48,7 @@ BOOKMARKS_FILE="$HOME/Music/sdr-stream-bookmarks"
 start_radio(){
 for target in field; do
     # extract url fragments from target
-    url=$(echo $field | awk '{printf $1}')
-    freq=$(echo $field | awk '{printf $2}')
-    mode=$(echo $field | awk '{printf $3}')
-    server_type=$(echo $field | awk '{printf $4}')
+    read -r url freq mode server_type dummy <<< "$field"
 done
 
 # make mode lower case; set bandpass and zoom
@@ -69,8 +66,8 @@ mode="${mode,,}"
 [[  "$mode" == "usbw" ]] && bandpass="10,8000" && zoom="z10" && mode="usb"
 
 # open the browser and connect to the SDR server
-[[ "$server_type" == "kiwi" ]] && ${browser} ${url}"?f="${freq}"/"${bandpass}${mode}${zoom} &
-[[ "$server_type" == "web" ]] && ${browser} ${url}"?tune="${freq}${mode} &
+[[ "$server_type" == "kiwi" ]] && ${browser} ${url}"?f="${freq}"/"${bandpass}${mode}${zoom}
+[[ "$server_type" == "web" ]] && ${browser} ${url}"?tune="${freq}${mode}
 exit 0
 }
 
@@ -90,7 +87,7 @@ CHOICE=$(echo "${CHANNELS[@]}" | sed '/^$/d' | awk -F\" '{printf $2"\n"}' | $COM
 CHECK=$(echo "${CHANNELS[@]}" | grep "$CHOICE")
 
 field=$(echo $CHECK | awk -F\" '{printf $4"\n"}')
-[[ -z "$field"  ]] || start_radio
+[[ -z "$field"  ]] || start_radio &
 
 field=$(echo $CHECK | awk -F\" '{printf $6"\n"}')
-[[ -z "$field"  ]] || start_radio
+[[ -z "$field"  ]] || start_radio &
