@@ -7,7 +7,7 @@
 # (at your option) any later version. There is NO warranty; not even for
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-# Automatically load KiwiSDR sites in a web browser to monitor something.
+# Bookmark KiwiSDR and WebSDR sites and open multiple web browser windows.
 #
 # NOTES:
 #  0) Channels are contained in a separate bookmarks file you should edit.
@@ -21,18 +21,17 @@
 #  4) Server urls contain the domain, subdomain (if used),
 #     the port number, and trailing slash "/" (always used)
 #  5) Frequencies are in kHz; decimals are optional.
-#  6) Use lower case letters for the mode: "cw", "lsb", "am"
-#  7) The preferred AM mode is synchronous AM; any mode
-#     set to "am" will be automatically switched to "sam"
-#  8) CW mode will default to "usb" with an 800 Hz offset
-#     and a bandpass of 600 to 1000 Hz.
+#  6) Use lower case for modes: "cw", "lsb", "usb", "am", "drm"
+#  7) The preferred AM mode is synchronous AM.
+#  8) CW mode will default to "usb" with a 750 Hz offset
+#     and a bandpass of 550 to 950 Hz.
 #  9) Extended Single Sideband is set for an 8000 Hz banpass.
 #     It should be designated as "lsbw" or "usbw".
 # 10) DRM is available and is set for a 10 kHz bandpass
 # 11) Server types are "kiwi" for KiwiSDR or "web" for WebSDR
 #
-# Examples ("description" "server" "server" ):
-# "Atlantic Routes" "http://raleigh.twrmon.net:8073/ 6577.00 usb kiwi""http://bottlebranch.proxy.kiwisdr.com:8073/ 6577.00 usb kiwi"
+# Example bookmark syntax: "description" "server" "server"
+# "Western Atlantic Routes" "http://raleigh.twrmon.net:8073/ 6577.00 usb kiwi" "http://bottlebranch.proxy.kiwisdr.com:8073/ 6577.00 usb kiwi"
 # "BBC Radio 4 Longwave(WebSDR)" "http://websdr.ewi.utwente.nl:8901/ 198.00 am web"
 #
 # Specify the web browser command
@@ -40,7 +39,7 @@
 browser='firefox --new-window'
 
 # specify the bookmarks file
-BOOKMARKS_FILE="$HOME/Music/sdr-stream-bookmarks"
+BOOKMARKS_FILE="$HOME/bash/sdr-stream-bookmarks"
 
 ###############################################################################
 # CAUTION: DRAGONS LIVE BELOW THIS LINE
@@ -55,14 +54,17 @@ done
 mode="${mode,,}"
 [[  "$mode" == "am" ]] && [[ "$server_type" == "kiwi" ]] && \
     mode="sam" && bandpass="-4000,4000" && zoom="z10"
-[[  "$mode" == "sam" ]] && [[ "$server_type" == "web" ]] && \
-    mode="am"  # envelope detector because not enough WebSDRs have sync option
-[[  "$mode" == "cw" ]] && mode="usb" && bandpass="600,1000" && \
-    freq=$(echo "$freq - 0.8" | bc) && zoom="z13"
+[[  "$mode" == "amsync" ]] && [[ "$server_type" == "web" ]] && \
+    mode="am"
+    # WebSDR default to envelope detector because not enough have am sync option
+[[  "$mode" == "cw" ]] && [[ "$server_type" == "kiwi" ]] && \
+    mode="usb" && bandpass="550,950" && \
+    freq=$(echo "$freq - 0.75" | bc) && zoom="z13"
+    # KiwiSDR cw offset 750 Hz
 [[  "$mode" == "drm" ]] && bandpass="-5000,5000" && zoom="z10"
 [[  "$mode" == "lsb" ]] && bandpass="-3500,-100" && zoom="z13"
-[[  "$mode" == "lsbw" ]] && bandpass="-8000,-10" && zoom="z10" && mode="lsb"
 [[  "$mode" == "usb" ]] && bandpass="100,3500" && zoom="z13"
+[[  "$mode" == "lsbw" ]] && bandpass="-8000,-10" && zoom="z10" && mode="lsb"
 [[  "$mode" == "usbw" ]] && bandpass="10,8000" && zoom="z10" && mode="usb"
 
 # open the browser and connect to the SDR server
