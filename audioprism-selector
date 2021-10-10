@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Copyright (c) 2021 by Philip Collier, radio AB9IL <webmaster@ab9il.net>
+# This script is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version. There is NO warranty; not even for
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+# start audioprism with specific parameters
+# to view live audio spectrum
+
+OPTION1="High Rate"
+OPTION2="Medium Rate"
+OPTION3="Low Rate"
+OPTIONS="$OPTION1\n$OPTION2\n$OPTION3"
+
+SELECTED="$(echo -e "$OPTIONS" | rofi -lines 3 -dmenu -p "FFT Samplerate")"
+
+[[  "$SELECTED" == "High Rate" ]] && audioprism -r 48000 \
+    --orientation horizontal --width 1920 \
+    --magnitude-min -18 --dft-size 1024 \
+    --overlap 35
+[[  "$SELECTED" == "Medium Rate" ]] && audioprism -r 22000 \
+    --orientation horizontal --width 1920 \
+    --magnitude-min -18 --dft-size 1024 \
+    --overlap 35
+
+[[  "$SELECTED" == "Low Rate" ]] && audioprism -r 9000 \
+    --orientation horizontal --width 1920 \
+    --magnitude-min -18 --dft-size 1024 \
+    --overlap 35
