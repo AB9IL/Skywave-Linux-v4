@@ -16,6 +16,9 @@ Requires python3 and modules folium, pandas, and numpy.
 #### ais_monitor.sh:
 Requires rtl-ais.  Simultaneous dual channel ais maritime data capture.  The ais-mapper reads a file of decoded NMEA sentences containing AIS data, builds a dataframe, and plots vessels according to mmsi, name, latitude, and longitude.
 
+#### audioprism-selector:
+Requires audioprism.  Sets parameters to display colorful audio spectrum waterfall based on user choice of a high, medium, or low sampling rate.
+
 #### dump1090.sh:
 Requires dump1090 and dump1090-stream-parser.  Capture, parse, and save aeronautical ADS-B data.
 
