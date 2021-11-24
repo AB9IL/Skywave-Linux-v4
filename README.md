@@ -65,7 +65,7 @@ Requires Rofi and / or fzf.  Reads a list of radio bookmarks to tune on your loc
 Requires Rofi and / or fzf.  Provide easy and rapid access to favorite stations on WebSDR or KiwiSDR servers.  Supports simultaneous "multi site" monitoring.
 
 #### sshuttle-controller.sh:
-Requires sshuttle and Rofi or fzf.  SSH tunneling application for anti-censorship when VPNs are being blocked.  It now presents a menu from which the user selects from multiple servers (or different accounts on one server).  The server list is written to ~/.config/sshuttle/sshuttle.conf.  Each line should contain three space separated fields: ip-address username port.  Call the script with no arguments to run in CLI mode with fzf; add the argument "gui" to use Rofi.
+Requires sshuttle and Rofi or fzf.  SSH tunneling application for anti-censorship when VPNs are being blocked.  It now presents a menu from which the user selects from multiple servers (or different accounts on one server).  Server data is taken from the standard openssh configuration file (~/.ssh/config).  Be sure to set up all applicable settings, especially for key based / no password logins.  Call the script with no arguments to run in CLI mode with fzf; add the argument "gui" to use Rofi.
 
 #### vimwiki:
 Requires Neovim with Vimwiki plugin.  Take notes in markdown format, fully linkable and searchable.
