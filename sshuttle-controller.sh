@@ -11,15 +11,17 @@ Encoding=UTF-8
 # config file format: one line per user account on the server
 # each line contains: ip username port
 # separate fields with a space
-CONFIGFILE=$HOME/.config/sshuttle/sshuttle.conf
+CONFIGFILE=$HOME/.ssh/config
 
 ROFI_COMMAND1='rofi -dmenu -p Select -lines 3'
 FZF_COMMAND1='fzf --layout=reverse --header=Select:'
 ROFI_COMMAND2='rofi -dmenu -p Select'
 FZF_COMMAND2='fzf --layout=reverse --header=Select:'
+FZF_COMMAND3="vim $CONFIGFILE"
+ROFI_COMMAND3="x-terminal-emulator -e vim $CONFIGFILE"
 
 edit_data(){
-    vim $CONFIGFILE
+    $COMMAND3
 }
 
 showhelp(){
@@ -33,31 +35,17 @@ Options:    gui     Graphical user interface.
 }
 
 start_sshuttle(){
-    readarray SERVERS < $CONFIGFILE
-    CHOICE="$(echo "${SERVERS[@]}" | awk '{print $1, $2}' | $COMMAND2 )"
+    CHOICE="$(grep -E '^Host \w' $CONFIGFILE | awk '{print $2}' | $COMMAND2 )"
     [[ -z "$CHOICE" ]] && echo "No selection..." && exit 1
-    # go back and find the correct entry; read the data and connect
-    i=0
-    while [ $i -lt ${#SERVERS[@]} ]; do
-        # remove newlines and whitespace before looking for a match
-        CHOICE="$(echo $CHOICE | tr -d ' ')"
-        ITEM="$(echo "${SERVERS[i]}" | awk '{print $1, $2}' | tr -d \\n | tr -d ' ')"
-        # set variables if there is a match
-        if [ "$ITEM" == "$CHOICE" ]; then
-                export SSHUTTLE_IP="$(echo "${SERVERS[i]}" | awk '{print $1}')"
-                export SSHUTTLE_USER="$(echo "${SERVERS[i]}" | awk '{print $2}')"
-                export SSHUTTLE_PORT="$(echo "${SERVERS[i]}" | awk '{print $3}')"
-                sudo iptables-save > /tmp/iptables.backup; \
-                x-terminal-emulator -e  sh -c "sshuttle -r $SSHUTTLE_USER@$SSHUTTLE_IP:$SSHUTTLE_PORT 0.0.0.0/0 \
-                    --ssh-cmd 'ssh -o ServerAliveInterval=60' \
-                    --dns \
-                    --pidfile=/tmp/sshuttle.pid; \
-                    read line; kill $(cat /tmp/sshuttle.pid); \
-                    sudo iptables-restore < /tmp/iptables.backup " &
-                break
-        fi
-    ((i++))
-    done
+    sudo iptables-save > /tmp/iptables.backup; \
+    x-terminal-emulator -e  sh -c "sshuttle \
+        --verbose \
+        --remote $CHOICE 0/0 \
+        --ssh-cmd 'ssh' \
+        --dns \
+        --pidfile=/tmp/sshuttle.pid; \
+        read line; kill $(cat /tmp/sshuttle.pid); \
+        sudo iptables-restore < /tmp/iptables.backup " &
 }
 
 stop_sshuttle(){
@@ -70,10 +58,12 @@ case "$1" in
     "")
         COMMAND1=$FZF_COMMAND1
         COMMAND2=$FZF_COMMAND2
+        COMMAND3=$FZF_COMMAND3
         ;;
     "gui")
         COMMAND1=$ROFI_COMMAND1
         COMMAND2=$ROFI_COMMAND2
+        COMMAND3=$ROFI_COMMAND3
         ;;
     *)
         showhelp
