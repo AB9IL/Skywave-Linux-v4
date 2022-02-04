@@ -13,6 +13,7 @@ Encoding=UTF-8
 # separate fields with a space
 CONFIGFILE=$HOME/.ssh/config
 
+IPTABLES_BACKUP='/tmp/iptables.backup'
 ROFI_COMMAND1='rofi -dmenu -p Select -lines 3'
 FZF_COMMAND1='fzf --layout=reverse --header=Select:'
 ROFI_COMMAND2='rofi -dmenu -p Select'
@@ -37,7 +38,7 @@ Options:    gui     Graphical user interface.
 start_sshuttle(){
     CHOICE="$(grep -E '^Host \w' $CONFIGFILE | awk '{print $2}' | $COMMAND2 )"
     [[ -z "$CHOICE" ]] && echo "No selection..." && exit 1
-    sudo iptables-save > /tmp/iptables.backup; \
+    [[ -f "$IPTABLES_BACKUP" ]] || sudo iptables-save > $IPTABLES_BACKUP; \
     x-terminal-emulator -e  sh -c "sshuttle \
         --verbose \
         --remote $CHOICE 0/0 \
@@ -50,7 +51,7 @@ start_sshuttle(){
 
 stop_sshuttle(){
 kill $(cat /tmp/sshuttle.pid)
-sudo iptables-restore < /tmp/iptables.backup
+sudo iptables-restore < "$IPTABLES_BACKUP"
 exit 0
 }
 
