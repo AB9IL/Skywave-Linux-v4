@@ -61,6 +61,9 @@ Requires RTLSDR-Airband.  Simultaneous multichannel am or nbfm voice reception.
 #### sdr-bookmarks:
 Requires Rofi and / or fzf.  Reads a list of radio bookmarks to tune on your local RTL-SDR.  It presents a "fuzzy finder" style menu.  When a frequency is selected, rtl_fm tunes to it and drops into the background to provide audio.  Bring up the menu again to select another frequency or stop reception.  The radio bookmarks are stored in the file "sdrbookmarks" located in the ~/Music directory.  Entries are one per line, formatted in order of "frequency mode description" with the description in quotes.  There is a menu option for editing the list.
 
+#### sdr-scanner:
+Requires gqrx-scanner.  A simple starter for gqrx-scanner which controls Gqrx, scanning either a predefined list of frequencies or a range of spectrum.
+
 #### sdr-stream:
 Requires Rofi and / or fzf.  Provide easy and rapid access to favorite stations on WebSDR or KiwiSDR servers.  Supports simultaneous "multi site" monitoring.
 
