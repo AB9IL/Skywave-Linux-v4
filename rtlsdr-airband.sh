@@ -20,26 +20,29 @@ devdriver=$(cat /usr/local/etc/sdr_driver)
 #Get the SoapySDR device key, such as "rtl=0"
 devkey=$(cat /usr/local/etc/sdr_key)
 # strip the number from the device key
-key=$(echo $devkey | cut -f2 -d "=")
+key="$(echo "$devkey" | cut -f2 -d "=")"
+
+# file with voice frequencies
+voicefreqs="/usr/local/etc/VOICE_FREQS"
 
 #Get the frequency and mode list
-readarray FREQLIST < /usr/local/etc/VOICE_FREQS
+readarray FREQLIST < "$voicefreqs"
 
 # compute the median frequency here...
 MYLIST=()
-for thefreq in ${FREQLIST[@]}; do
-	a=$(echo $thefreq | cut -f1 -d ",")
+for thefreq in "${FREQLIST[@]}"; do
+	a=$(echo "$thefreq" | cut -f1 -d ",")
 	MYLIST+=("${a}")
 done
 
 IFS=$'\n'
-ctrfreq=$(awk '{arr[NR]=$1} END {if (NR%2==1) print arr[(NR+1)/2]; \
+ctrfreq=$(awk '{arr[NR]=$1} END {if (NR%2==1) print arr[(NR+1)/2];
 else print (arr[NR/2]+arr[NR/2+1])/2}' <<< sort <<< "${MYLIST[*]}")
 
 # Format the center frequency the SDR will use
 ctrfreq=$(printf "%8.2f\n" "$ctrfreq")
 
-echo "Found the frequency list in ~/Documents/VOICE_FREQS: ${FREQLIST[@]}"
+echo "Found the frequency list in ${voicefreqs}: ${MYLIST[*]}"
 echo "Median frequency is ${ctrfreq}"
 unset IFS
 
@@ -97,7 +100,7 @@ start1
 
 stop(){
 #stop rtlsdr-airband
-killall -9 rtl_airband $(lsof -t -i:8000)
+killall -9 rtl_airband "$(lsof -t -i:8000)"
 #stop the icecast2 server
 systemctl stop icecast2
 echo "STOPPED RTLSDR-Airband. Alpha Mike Foxtrot..."
@@ -140,7 +143,7 @@ devices:
 #write the channel and signal modulation confifig data here...
 n=1
 comma=","
-for thechannel in ${FREQLIST[@]}; do
+for thechannel in "${FREQLIST[@]}"; do
 freq=$(echo $thechannel | cut -f1 -d ",")
 sigmode=$(echo $thechannel | cut -f2 -d ",")
 
@@ -222,7 +225,7 @@ devices:
 #write the channel and mode confifig data here...
 n=1
 comma=","
-for thechannel in ${FREQLIST[@]}; do
+for thechannel in "${FREQLIST[@]}"; do
 freq=$(echo $thechannel | cut -f1 -d ",")
 sigmode=$(echo $thechannel | cut -f2 -d ",")
 
@@ -278,7 +281,7 @@ notifyerror(){
 		--text="Something went wrong!!!!!!");
 }
 
-ans=$(zenity --list --title "Multichannel Voice" --height 480 --width 500 \
+ans=$(zenity --list --title "Multichannel Voice" --height 540 --width 500 \
 --text "Multichannel Voice functions:
 --Uses SoapySDR drivers
 --Simultaneous multichannel demodulation
@@ -289,7 +292,7 @@ ans=$(zenity --list --title "Multichannel Voice" --height 480 --width 500 \
   The format is one frequency and mode per line, comma separated.
 
 Frequencies:
-$(echo ${FREQLIST[@]})
+${MYLIST[*]}
 " \
 --radiolist  --column "Pick" --column "Action" \
 FALSE "Start Multichannel Voice (PulseAudio)" \
@@ -306,5 +309,6 @@ TRUE "Stop Multichannel Voice" \
 # [[ "$ans" == "Set channels and start Multichannel Voice (Icecast)" ]] && start3
 [[ "$ans" == "Backup the current config file" ]] && backupconf
 [[ "$ans" == "Restore the config file from a backup" ]] && restoreconf
-[[ "$ans" == "Edit the frequency list" ]] && x-terminal-emulator -e "nano /usr/local/etc/VOICE_FREQS"
+[[ "$ans" == "Edit the frequency list" ]] && \
+    x-terminal-emulator -e vi "$voicefreqs"
 [[ "$ans" == "Stop Multichannel Voice" ]] && stop
