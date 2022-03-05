@@ -8,6 +8,11 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 # Capture, decode, and save AIS data.
+
+# define the rofi and fzf commands
+ROFI_COMMAND1="rofi -dmenu -p Select -lines 5"
+FZF_COMMAND1="fzf --layout=reverse --header=Select:"
+
 IFS=$'\n'
 jsonfile=$HOME"/ais_log.json"
 #Get the SDR frequency offset (ppm)
@@ -20,9 +25,9 @@ dumpto_file() {
 # create a pipe
 mkfifo -m 666 $fifo
 # start reading from the pipe
-cat $fifo | gpsdecode -j | tee -a $jsonfile &
+gpsdecode -j < $fifo | tee -a "$jsonfile" &
 # feed the pipe
-rtl_ais -p $ppm -g $gain &
+rtl_ais -p "$ppm" -g "$gain" &
 nc 127.0.0.1 10110 > $fifo
 
 WINDOW=$(zenity --info --height 100 --width 350 \
@@ -38,7 +43,7 @@ mkfifo -m 666 $fifo
 # call the python script to read the pipe and build the database
 sh -c "ais-fileto-sqlite $fifo"
 # get nmea data and feed the pipe
-rtl_ais -p $ppm -g $gain &
+rtl_ais -p "$ppm" -g "$gain" &
 nc 127.0.0.1 10110 > $fifo
 
 WINDOW=$(zenity --info --height 100 --width 350 \
@@ -59,13 +64,13 @@ case $? in
 		echo "No file selected."
 		WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="RTL-AIS - NMEA - Decode to Database." \
-		--text="No file selected; no decoding accomplished.")
+		--text="No file selected. \nNo decoding accomplished.")
 		exit;;
 	2)
 		echo "Something went wrong..."
 		WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="RTL-AIS - NMEA - Decode to Database." \
-		--text="No file selected; no decoding accomplished.")
+		--text="No file selected. \nNo decoding accomplished.")
 		exit;;
 esac
 
@@ -75,8 +80,9 @@ sh -c "ais-fileto-sqlite $nmeafile"
 
 WINDOW=$(zenity --info --height 100 --width 350 \
 --title="RTL-AIS - NMEA - Decode to Database." \
---text="The decoder process has run.  Look for a timestamped
-\"...ais-decoded.db\" file.");
+--text="The decoder process has run. \
+\nFind the timestamped \
+\"\n...ais-decoded.db\" file.");
 }
 
 readto_json() {
@@ -87,24 +93,26 @@ case $? in
 		TIME=$(date +%Y-%m-%d_%H-%M-%S)
 		nmeafile=$FILE
 		# cat -> decode -> save
-		cat $nmeafile | gpsdecode | tee $TIME'-ais-decoded.json'
+		gpsdecode < "$nmeafile" | tee "${TIME}-ais-decoded.json"
 
 		WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="RTL-AIS - NMEA - Decode to JSON." \
-		--text="The decoder process has run; \"...-ais-decoded.json\" written.")
+		--text="The decoder process has run. \
+        \nFind the timestamped \
+        \"\n...ais-decoded.json\" file.")
 		;;
 	1)
 		echo "No file selected."
 		WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="RTL-AIS - NMEA - Decode to JSON." \
-		--text="No file selected; no decoding accomplished.")
+		--text="No file selected. \nNo decoding accomplished.")
 		exit
 		;;
 	2)
 		echo "Something went wrong..."
 		WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="RTL-AIS - NMEA - Decode to JSON." \
-		--text="Something went wrong; no decoding accomplished.")
+		--text="Something went wrong. \nNo decoding accomplished.")
 		exit
 		;;
 esac
@@ -117,7 +125,7 @@ case $? in
 	0)
 		echo "\"$FILE\" selected."
 		jsonfile=$FILE
-		ais-mapper $jsonfile
+		ais-mapper "$jsonfile"
 
 		WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="RTL-AIS - Mapper Starting." \
@@ -127,14 +135,14 @@ case $? in
 		echo "No file selected."
 		WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="RTL-AIS - Mapping Failed: No File Selected" \
-		--text="No file selected; no map plotting possible.")
+		--text="No file selected. \nNo map plotting possible.")
 		exit
 		;;
 	2)
 		echo "Something went wrong..."
 		WINDOW=$(zenity --info --height 100 --width 350 \
 		--title="RTL-AIS - Mapping Failed: Something Went Wrong" \
-		--text="Something went wrong; no mapping accomplished.")
+		--text="Something went wrong. \nNo mapping accomplished.")
 		exit
 		;;
 esac
@@ -146,19 +154,53 @@ killall rtl_ais nc
 rm -f $fifo
 }
 
-ans=$(zenity  --list  --title "AIS MONITOR" --width=600 --height=280 \
---text "Manage capture and plotting of AIS data." \
---radiolist  --column "Pick" --column "Action" \
-FALSE "Capture AIS NMEA sentences by radio, decode, and write to a logfile."  \
-FALSE "Capture AIS NMEA sentences by radio, decode, and write to a database." \
-FALSE "Read a file containing AIS NMEA sentences, decode, and write to a database." \
-FALSE "Read a file containing AIS NMEA sentences, decode, and write to a json file." \
-FALSE "Plot decoded AIS info on a map." \
-TRUE "Stop AIS capture and logging.");
+showhelp(){
+echo "The AIS monitor captures Automatic Identification System
+      data from maritime vessels, such as position, movement
+      direction, and speed.
 
-[[ "$ans" == "Capture AIS NMEA sentences by radio, decode, and write to a logfile." ]] && dumpto_file
-[[ "$ans" == "Capture AIS NMEA sentences by radio, decode, and write to a database." ]] && dumpto_db
-[[ "$ans" == "Read a file containing AIS NMEA sentences, decode, and write to a database." ]] && readto_db
-[[ "$ans" == "Read a file containing AIS NMEA sentences, decode, and write to a json file." ]] && readto_json
-[[ "$ans" == "Plot decoded AIS info on a map." ]] && startmapper
-[[ "$ans" == "Stop AIS capture and logging." ]] && stopcapture
+Usage: $0 to start from the terminal.
+       $0 gui to start in Rofi.
+
+       Select the mode of data presentation.
+       Choices are:
+         - capture data and store it in a database
+         - read data from a file and copy it to a database
+         - read data and write it to a file in json format
+
+       Use the \"SDR Operating Parameters\" app to:
+         - enter your geographic coordinates for the map.
+         - set the SDR device gain
+         - set the device ppm offset corection
+         - set other device operating parameters
+
+         "
+}
+
+case "$1" in
+    "")
+        COMMAND1=$FZF_COMMAND1
+        ;;
+    "gui")
+        COMMAND1=$ROFI_COMMAND1
+        ;;
+    *)
+        showhelp
+        ;;
+esac
+
+OPTIONS="Capture AIS NMEA sentences by radio, decode, and write to a logfile. 
+Capture AIS NMEA sentences by radio, decode, and write to a database.
+Read a file containing AIS NMEA sentences, decode, and write to a database.
+Read a file containing AIS NMEA sentences, decode, and write to a json file.
+Stop AIS capture and logging."
+
+# Take the choice; exit if no answer matches options.
+(IFS=" "; REPLY="$(echo "$OPTIONS" | $COMMAND1 )"
+
+[[ "$REPLY" == "Capture AIS NMEA sentences by radio, decode, and write to a logfile." ]] && dumpto_file
+[[ "$REPLY" == "Capture AIS NMEA sentences by radio, decode, and write to a database." ]] && dumpto_db
+[[ "$REPLY" == "Read a file containing AIS NMEA sentences, decode, and write to a database." ]] && readto_db
+[[ "$REPLY" == "Read a file containing AIS NMEA sentences, decode, and write to a json file." ]] && readto_json
+[[ "$REPLY" == "Plot decoded AIS info on a map." ]] && startmapper
+[[ "$REPLY" == "Stop AIS capture and logging." ]] && stopcapture)
