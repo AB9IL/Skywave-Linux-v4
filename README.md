@@ -1,5 +1,5 @@
 # Skywave-Linux-v4
-Scripts providing efficient, powerful, yet user friendly software defined radio operation in Skywave Linux v4.
+Scripts providing efficient, powerful, yet user friendly software defined radio operation in Skywave Linux v4.  Many of the applications used by these scripts are sourced from git repositories.  See the [AB9IL/SDR-Scripts](https://github.com/AB9IL/SDR-Scripts) repo for the installer-updaters.  They work on most Linux with Bash and commonly installed utilities.
 
 #### aeromodes.sh:
 Requires acarsdec and vdlm2dec.  Simultaneous and multichannel ACARS or VDL Mode 2 data capture.
