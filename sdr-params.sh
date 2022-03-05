@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2019 by Philip Collier, radio AB9IL <webmaster@ab9il.net>
+# Copyright (c) 2021 by Philip Collier, radio AB9IL
 # This script is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
@@ -146,7 +146,8 @@ if [[ -z "$offset" ]]; then
 fi
 
 echo $offset > /usr/local/etc/sdr_offset  # save offset for general usage
-sed -i "s/corr_freq=.*/corr_freq=${offset}000000/g" ~/.config/gqrx/default.conf # save offset for gqrx
+offset2="$(bc<<<${offset}*10)"
+sed -i "s/corr_freq=.*/corr_freq=${offset2}00000/g" ~/.config/gqrx/default.conf # save offset for gqrx
 
 	WINDOW=$(zenity --info --height 100 --width 350 \
 	--title="Calibration and Gain" \
@@ -206,7 +207,7 @@ TRUE "Set bias tee OFF.");
 	--text="The bias tee has been set to $teemode.");
 }
 
-ans=$(zenity  --list  --title "SDR Operating Parameters" --width 500 --height 520 \
+ans=$(zenity  --list  --title "SDR Operating Parameters" --width 500 --height 640 \
 --text "Manage RTL-SDR frequency calibration and gain.
 1) Calibration uses measurements of GSM base stations.
 2) Device gain is saved for reference by other applications.
