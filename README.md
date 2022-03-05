@@ -19,6 +19,9 @@ Requires rtl-ais.  Simultaneous dual channel ais maritime data capture.  The ais
 #### audioprism-selector:
 Requires audioprism.  Sets parameters to display colorful audio spectrum waterfall based on user choice of a high, medium, or low sampling rate.
 
+#### cubicsdr
+Requires CubicSDR (AppImage).  A simple wrapper for the CubicSDR Appimage file.
+
 #### dump1090.sh:
 Requires dump1090 and dump1090-stream-parser.  Capture, parse, and save aeronautical ADS-B data.
 
