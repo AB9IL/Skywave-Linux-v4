@@ -21,6 +21,10 @@ devkey=$(cat /usr/local/etc/sdr_key)
 readarray -t devposition < /usr/local/etc/sdr_posn
 fifo='/run/dump1090/1090.dump'
 
+# define the rofi and fzf commands
+ROFI_COMMAND1="rofi -dmenu -p Select -lines 5"
+FZF_COMMAND1="fzf --layout=reverse --header=Select:"
+
 startlog() {
 # run dump1090
 mkfifo -m 666 $fifo
@@ -75,22 +79,59 @@ notifyerror(){
 stop_dump(){
 killall -9 dump1090 rx_sdr rtl_sdr rtl_tcp $(lsof -t -i:30003) sqlitebrowser
 pkill -f /usr/local/bin/dump1090-stream-parser
-rm -f $fifo
+find /run/dump1090/ -type p -delete
 exit
 }
 
-ans=$(zenity  --list  --title "Dump1090" --height=275 --width=450 \
---text "Manage ADS-B logging and plotting with SoapySDR devices.
--- Use the SDR Operating Parameters application
-   to enter your device type, PPM offset, and gain.
--- Select a monitoring action from the list below." \
---radiolist  --column "Pick" --column "Action" \
-FALSE "Start Dump1090 and write raw data to a logfile." \
-FALSE "Start Dump1090 and write decoded data to a database." \
-FALSE "Start Dump1090 and plot aircraft positions." \
-TRUE "Stop Dump1090");
+sdr_params() {
+sh -c "sdr-params.sh"
+}
 
-[[ "$ans" == "Start Dump1090 and write raw data to a logfile." ]] && startlog
-[[ "$ans" == "Start Dump1090 and write decoded data to a database." ]] && start_decoded_log
-[[ "$ans" == "Start Dump1090 and plot aircraft positions." ]] && startplot
-[[ "$ans" == "Stop Dump1090" ]] && stop_dump
+showhelp() {
+echo "Dump1090 captures pulse modulated data from mode-s transponders
+aboard aircraft.
+
+Usage: $0 to start from the terminal.
+       $0 gui to start in Rofi.
+
+       Select the mode of data presentation.
+       Choices are:
+         - raw data dump to file
+         - store data in database
+         - present data on a map
+
+       Use the SDR Operating Parameters app to:
+         - enter your geographic coordinates for the map.
+         - set the SDR device gain
+         - set the device ppm offset corection
+         - set other device operating parameters
+
+         "
+}
+
+OPTIONS="Start Dump1090 and plot aircraft positions.
+Start Dump1090 and write decoded data to a database.
+Start Dump1090 and write raw data to a logfile.
+Set your geograpgic location or device parameters.
+Stop Dump1090."
+
+case "$1" in
+    "")
+        COMMAND1=$FZF_COMMAND1
+        ;;
+    "gui")
+        COMMAND1=$ROFI_COMMAND1
+        ;;
+    *)
+        showhelp
+        ;;
+esac
+
+# Take the choice; exit if no answer matches options.
+REPLY="$(echo -e "$OPTIONS" | $COMMAND1 )"
+
+[[ "$REPLY" == "Start Dump1090 and plot aircraft positions." ]] && startplot
+[[ "$REPLY" == "Start Dump1090 and write decoded data to a database." ]] && start_decoded_log
+[[ "$REPLY" == "Start Dump1090 and write raw data to a logfile." ]] && startlog
+[[ "$REPLY" == "Stop Dump1090." ]] && stop_dump
+[[ "$REPLY" == "Set your geograpgic location or device parameters." ]] && sdr_params
