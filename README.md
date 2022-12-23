@@ -62,13 +62,13 @@ Requires psiphon-tunnel-core.  Tunneling application for using Psiphon anti-cens
 Requires RTLSDR-Airband.  Simultaneous multichannel am or nbfm voice reception.
 
 #### sdr-bookmarks:
-Requires Rofi and / or fzf.  Reads a list of radio bookmarks to tune on your local RTL-SDR.  It presents a "fuzzy finder" style menu.  When a frequency is selected, rtl_fm tunes to it and drops into the background to provide audio.  Bring up the menu again to select another frequency or stop reception.  The radio bookmarks are stored in the file "sdrbookmarks" located in the ~/Music directory.  Entries are one per line, formatted in order of "frequency mode description" with the description in quotes.  There is a menu option for editing the list.
+Requires Rofi and / or fzf.  Reads a list of radio bookmarks to tune on your local RTL-SDR.  It presents a "fuzzy finder" style menu.  When a frequency is selected, rtl_fm tunes to it and drops into the background to provide audio.  Bring up the menu again to select another frequency or stop reception.  The radio bookmarks are stored in the file "sdrbookmarks" located in the ~/.config directory.  Entries are one per line, formatted in order of "frequency mode description" with the description in quotes.  There is a menu option for editing the list.
 
 #### sdr-scanner:
 Requires gqrx-scanner.  A simple starter for gqrx-scanner which controls Gqrx, scanning either a predefined list of frequencies or a range of spectrum.
 
 #### sdr-stream:
-Requires Rofi and / or fzf.  Provide easy and rapid access to favorite stations on WebSDR or KiwiSDR servers.  Supports simultaneous "multi site" monitoring.
+Requires Rofi and / or fzf.  Provide easy and rapid access to favorite stations on WebSDR or KiwiSDR servers.  Supports simultaneous "multi site" monitoring. Station data is stored in the file "sdr-stream-bookmarks" and located in the ~/.config directory.
 
 #### sshuttle-controller.sh:
 Requires sshuttle and Rofi or fzf.  SSH tunneling application for anti-censorship when VPNs are being blocked.  It now presents a menu from which the user selects from multiple servers (or different accounts on one server).  Server data is taken from the standard openssh configuration file (~/.ssh/config).  Be sure to set up all applicable settings, especially for key based / no password logins.  Call the script with no arguments to run in CLI mode with fzf; add the argument "gui" to use Rofi.
@@ -77,4 +77,4 @@ Requires sshuttle and Rofi or fzf.  SSH tunneling application for anti-censorshi
 Requires Neovim with Vimwiki plugin.  Take notes in markdown format, fully linkable and searchable.
 
 #### vlc-playlist:
-Rewritten for 2021! Requires VLC and Rofi or fzf.  Reads playlist of streaming audio broadcasters and presents a "fuzzy finder" style menu.  When a sation is selected, the application drops into the backgound to provide audio.  Bring up the menu again to select another station or stop streaming.  Amplitude compression is enabled by default to to make loudness more consistent across the various streams.  The playlist is contained in the file "radiostreams" and it is normally kept in the ~/Music directory.  Entries are one line per stream; url and quoted name of the station, and there is an option in the menu for editing the list.
+Rewritten for 2021! Requires VLC and Rofi or fzf.  Reads playlist of streaming audio broadcasters and presents a "fuzzy finder" style menu.  When a sation is selected, the application drops into the backgound to provide audio.  Bring up the menu again to select another station or stop streaming.  Amplitude compression is enabled by default to to make loudness more consistent across the various streams.  The playlist is contained in the file "radiostreams" and it is normally kept in the ~/.config directory.  Entries are one line per stream; url and quoted name of the station, and there is an option in the menu for editing the list.
