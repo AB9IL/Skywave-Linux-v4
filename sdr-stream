@@ -39,7 +39,7 @@
 browser='firefox --new-window'
 
 # specify the bookmarks file
-BOOKMARKS_FILE="$HOME/bash/sdr-stream-bookmarks"
+BOOKMARKS_FILE="$HOME/.config/sdr-stream-bookmarks"
 
 ###############################################################################
 # CAUTION: DRAGONS LIVE BELOW THIS LINE
