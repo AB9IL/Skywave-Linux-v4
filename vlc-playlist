@@ -7,7 +7,7 @@
 # (at your option) any later version. There is NO warranty; not even for
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-STREAMS_FILE="$HOME/Music/radiostreams"
+STREAMS_FILE="$HOME/.config/radiostreams"
 OPTION1="Start Internet Radio"
 OPTION2="Stop Streaming"
 OPTION3="Edit Station List"
