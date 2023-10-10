@@ -68,7 +68,7 @@ Requires Rofi and / or fzf.  Reads a list of radio bookmarks to tune on your loc
 Requires gqrx-scanner.  A simple starter for gqrx-scanner which controls Gqrx, scanning either a predefined list of frequencies or a range of spectrum.
 
 #### sdr-stream:
-Requires Rofi and / or fzf.  Provide easy and rapid access to favorite stations on WebSDR or KiwiSDR servers.  Supports simultaneous "multi site" monitoring. Station data is stored in the file "sdr-stream-bookmarks" and located in the ~/.config directory.
+This script has been moved to the [kiwisdr-helpers](https://github.com/AB9IL/kiwisdr-helpers) repository.
 
 #### sshuttle-controller.sh:
 Requires sshuttle and Rofi or fzf.  SSH tunneling application for anti-censorship when VPNs are being blocked.  It now presents a menu from which the user selects from multiple servers (or different accounts on one server).  Server data is taken from the standard openssh configuration file (~/.ssh/config).  Be sure to set up all applicable settings, especially for key based / no password logins.  Call the script with no arguments to run in CLI mode with fzf; add the argument "gui" to use Rofi.
