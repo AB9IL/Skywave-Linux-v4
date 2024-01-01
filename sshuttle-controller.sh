@@ -7,14 +7,16 @@
 # (at your option) any later version. There is NO warranty; not even for
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-Encoding=UTF-8
-# config file format: one line per user account on the server
-# each line contains: ip username port
-# separate fields with a space
-CONFIGFILE=$HOME/.ssh/config
+# Run this script as a regular user
 
-IPTABLES_BACKUP='/tmp/iptables.backup'
-ROFI_COMMAND1='rofi -dmenu -p Select -lines 3'
+Encoding=UTF-8
+# config file format: standard openssh config syntax.  Use the
+# actual file ~/.ssh/config or a different one in the same format.
+CONFIGFILE="$HOME/.ssh/config"
+
+IPTABLES_BACKUP="/tmp/iptables.backup"
+
+ROFI_COMMAND1='rofi -dmenu -p Select -l 3'
 FZF_COMMAND1='fzf --layout=reverse --header=Select:'
 ROFI_COMMAND2='rofi -dmenu -p Select'
 FZF_COMMAND2='fzf --layout=reverse --header=Select:'
@@ -39,19 +41,22 @@ start_sshuttle(){
     CHOICE="$(grep -E '^Host \w' $CONFIGFILE | awk '{print $2}' | $COMMAND2 )"
     [[ -z "$CHOICE" ]] && echo "No selection..." && exit 1
     [[ -f "$IPTABLES_BACKUP" ]] || sudo iptables-save > $IPTABLES_BACKUP; \
-    x-terminal-emulator -e  sh -c "sshuttle \
-        --verbose \
+    sshuttle \
         --remote $CHOICE 0/0 \
         --ssh-cmd 'ssh' \
         --dns \
-        --pidfile=/tmp/sshuttle.pid; \
-        read line; kill $(cat /tmp/sshuttle.pid); \
-        sudo iptables-restore < /tmp/iptables.backup " &
+	--pidfile='/tmp/sshuttle.pid' \
+        --daemon &
 }
 
 stop_sshuttle(){
-kill $(cat /tmp/sshuttle.pid)
-sudo iptables-restore < "$IPTABLES_BACKUP"
+    rm /tmp/sshuttle.pid
+    k="$(pgrep "sshuttle")"
+    for process in ${k[@]};do
+        pkill -15 $process
+    done
+    sudo pkill -f "/usr/bin/python3 /usr/bin/sshuttle"
+    sudo iptables-restore < "$IPTABLES_BACKUP"
 exit 0
 }
 
